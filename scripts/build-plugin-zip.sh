@@ -5,6 +5,7 @@ PLUGIN_SLUG="tn-user-management"
 DIST_DIR="dist"
 
 rm -rf "$DIST_DIR/$PLUGIN_SLUG"
+rm -f "$PLUGIN_SLUG.zip"
 mkdir -p "$DIST_DIR"
 cp -R "$PLUGIN_SLUG" "$DIST_DIR/$PLUGIN_SLUG"
 
@@ -14,3 +15,4 @@ rm -rf "$DIST_DIR/$PLUGIN_SLUG/node_modules"
 cd "$DIST_DIR"
 rm -f "$PLUGIN_SLUG.zip"
 zip -qr "$PLUGIN_SLUG.zip" "$PLUGIN_SLUG"
+cp "$PLUGIN_SLUG.zip" "../$PLUGIN_SLUG.zip"

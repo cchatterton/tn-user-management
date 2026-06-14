@@ -2,6 +2,11 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.7 - 2026-06-14
+
+- Added a generated root `tn-user-management.zip` for direct WordPress plugin upload.
+- Updated the release build script to publish the same ZIP to `dist/` and the repository root.
+
 ## 1.6 - 2026-06-14
 
 - Added GitHub release update support for native WordPress plugin updates.

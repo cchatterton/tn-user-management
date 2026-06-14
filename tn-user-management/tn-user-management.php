@@ -3,7 +3,7 @@
  * Plugin Name: TN User Management
  * Plugin URI: https://github.com/cchatterton/tn-user-management
  * Description: Email-as-username, one-time username migration, role normalisation, permission sets, and multisite user governance.
- * Version: 1.6
+ * Version: 1.7
  * Requires at least: 6.0
  * Requires PHP: 8.1
  * Author: Techn
@@ -22,7 +22,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 define( 'TN731_UMG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'TN731_UMG_URL', plugin_dir_url( __FILE__ ) );
-define( 'TN731_UMG_VERSION', '1.6' );
+define( 'TN731_UMG_VERSION', '1.7' );
 define( 'TN731_UMG_SITE_ROLE', 'administrator' );
 define( 'TN731_UMG_PLUGIN_FILE', __FILE__ );
 define( 'TN731_UMG_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
