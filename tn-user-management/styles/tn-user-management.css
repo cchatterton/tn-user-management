@@ -1,0 +1,96 @@
+.tn731-umg-actions {
+	margin: 0 0 8px;
+}
+
+.tn731-umg-button-row {
+	margin: 0 0 16px;
+}
+
+.tn731-umg-group {
+	margin: 0 0 20px;
+	padding: 12px;
+	background: #fff;
+	border: 1px solid #ddd;
+}
+
+.tn731-umg-group-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin: 0 0 10px;
+}
+
+.tn731-umg-group h4 {
+	margin: 0;
+}
+
+.tn731-umg-group-actions {
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.tn731-umg-checklist {
+	columns: 2;
+	column-gap: 24px;
+}
+
+.tn731-umg-checklist label,
+.tn731-umg-profile-set {
+	display: block;
+	margin: 0 0 8px;
+	break-inside: avoid;
+}
+
+.tn731-umg-user-list {
+	max-height: 360px;
+	overflow: auto;
+}
+
+.tn731-umg-user-group {
+	margin: 0 0 14px;
+}
+
+.tn731-umg-user-group-title {
+	margin: 0 0 8px;
+	color: #50575e;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: lowercase;
+}
+
+.tn731-umg-user-item {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin: 0 0 8px;
+}
+
+.tn731-umg-user-item input {
+	margin-top: 2px;
+}
+
+.tn731-umg-user-label {
+	display: block;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tn731-umg-table {
+	margin-top: 16px;
+}
+
+.tn731-umg-table th,
+.tn731-umg-table td {
+	text-align: center;
+}
+
+.tn731-umg-table .tn731-umg-capability-column {
+	text-align: left;
+}
+
+.tn731-umg-diff-row {
+	background: #fff8e5;
+}
