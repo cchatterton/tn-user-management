@@ -35,12 +35,11 @@ final class TN731_UMG_GitHub_Updater {
 
 		$version      = self::release_version( $release );
 		$download_url = self::release_asset_url( $release );
+		$plugin_file  = plugin_basename( TN731_UMG_PLUGIN_FILE );
 
 		if ( empty( $version ) || empty( $download_url ) || ! version_compare( $version, TN731_UMG_VERSION, '>' ) ) {
-			return $transient;
+			return self::clear_stale_update( $transient, $plugin_file );
 		}
-
-		$plugin_file = plugin_basename( TN731_UMG_PLUGIN_FILE );
 
 		$transient->response[ $plugin_file ] = (object) array(
 			'id'           => self::repository_url(),
@@ -109,6 +108,11 @@ final class TN731_UMG_GitHub_Updater {
 
 	private static function get_latest_release() {
 
+		if ( self::is_forced_update_check() ) {
+			delete_site_transient( self::RELEASE_TRANSIENT );
+			delete_site_transient( self::FAILED_TRANSIENT );
+		}
+
 		$release = get_site_transient( self::RELEASE_TRANSIENT );
 
 		if ( is_array( $release ) ) {
@@ -146,6 +150,32 @@ final class TN731_UMG_GitHub_Updater {
 		delete_site_transient( self::FAILED_TRANSIENT );
 
 		return $release;
+	}
+
+	private static function clear_stale_update( $transient, $plugin_file ) {
+
+		if ( isset( $transient->response[ $plugin_file ] ) ) {
+			unset( $transient->response[ $plugin_file ] );
+		}
+
+		$transient->no_update[ $plugin_file ] = (object) array(
+			'id'           => self::repository_url(),
+			'slug'         => self::SLUG,
+			'plugin'       => $plugin_file,
+			'new_version'  => TN731_UMG_VERSION,
+			'url'          => self::repository_url(),
+			'package'      => '',
+			'requires'     => '6.0',
+			'requires_php' => '8.1',
+		);
+
+		return $transient;
+	}
+
+	private static function is_forced_update_check() {
+		$force_check = isset( $_GET['force-check'] ) ? sanitize_text_field( wp_unslash( $_GET['force-check'] ) ) : '';
+
+		return '1' === $force_check;
 	}
 
 	private static function release_version( $release ) {
