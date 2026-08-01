@@ -341,6 +341,68 @@ function tn731_umg_get_permission_set_meta_or_default( $post_id, $meta_key, $def
 
 /*
 |--------------------------------------------------------------------------
+| Per-User Content Access
+|--------------------------------------------------------------------------
+*/
+
+function tn731_umg_get_user_content_access( $user_id ) {
+	$access = sanitize_key( (string) get_user_meta( $user_id, 'tn731_umg_content_access', true ) );
+
+	return 'own' === $access ? 'own' : 'all';
+}
+
+add_filter( 'map_meta_cap', 'tn731_umg_enforce_own_content_access', 100, 4 );
+
+function tn731_umg_enforce_own_content_access( $required_capabilities, $requested_capability, $user_id, $args ) {
+
+	if ( empty( $user_id ) || 'own' !== tn731_umg_get_user_content_access( $user_id ) ) {
+		return $required_capabilities;
+	}
+
+	if ( is_multisite() && is_super_admin( $user_id ) ) {
+		return $required_capabilities;
+	}
+
+	$user = get_userdata( $user_id );
+
+	if ( ! $user || ! in_array( 'user', (array) $user->roles, true ) ) {
+		return $required_capabilities;
+	}
+
+	$post_id = isset( $args[0] ) ? absint( $args[0] ) : 0;
+
+	if ( ! $post_id ) {
+		return $required_capabilities;
+	}
+
+	$post = get_post( $post_id );
+
+	if ( ! $post || (int) $post->post_author === (int) $user_id ) {
+		return $required_capabilities;
+	}
+
+	$post_type = get_post_type_object( $post->post_type );
+
+	if ( ! $post_type || empty( $post_type->public ) || empty( $post_type->cap ) ) {
+		return $required_capabilities;
+	}
+
+	$restricted_capabilities = array_filter(
+		array(
+			isset( $post_type->cap->edit_post ) ? $post_type->cap->edit_post : '',
+			isset( $post_type->cap->delete_post ) ? $post_type->cap->delete_post : '',
+		)
+	);
+
+	if ( in_array( $requested_capability, $restricted_capabilities, true ) ) {
+		return array( 'do_not_allow' );
+	}
+
+	return $required_capabilities;
+}
+
+/*
+|--------------------------------------------------------------------------
 | Runtime Visibility
 |--------------------------------------------------------------------------
 */

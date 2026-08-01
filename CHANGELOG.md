@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.11 - 2026-08-01
+
+- Added a dedicated Custom capability group for capabilities created through the plugin.
+- Added per-user All content and Own content only controls to the Permission Sets profile block.
+- Enforced ownership restrictions across all public post types while preserving read access to other authors' content.
+
 ## 1.10 - 2026-08-01
 
 - Aligned capability columns consistently across every grouped table.

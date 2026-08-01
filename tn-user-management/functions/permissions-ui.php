@@ -305,6 +305,10 @@ function tn731_umg_show_user_permission_sets_field( $user ) {
 
 	$sets     = tn731_umg_get_all_permission_sets();
 	$selected = tn731_umg_get_user_permission_set_ids( $user->ID );
+	$content_access = function_exists( 'tn731_umg_get_user_content_access' )
+		? tn731_umg_get_user_content_access( $user->ID )
+		: 'all';
+	$can_manage_content_access = tn731_umg_can_manage_user_content_access( $user->ID );
 
 	wp_nonce_field( 'tn731_umg_save_user_permission_sets', 'tn731_umg_user_permission_sets_nonce' );
 	?>
@@ -332,6 +336,25 @@ function tn731_umg_show_user_permission_sets_field( $user ) {
 				<?php endif; ?>
 			</td>
 		</tr>
+		<?php if ( $can_manage_content_access ) : ?>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Content access', 'tn-user-management' ); ?></th>
+				<td>
+					<fieldset class="tn731-umg-content-access-options">
+						<legend class="screen-reader-text"><?php esc_html_e( 'Content access', 'tn-user-management' ); ?></legend>
+						<label>
+							<input type="radio" name="tn731_umg_content_access" value="all" <?php checked( 'all', $content_access ); ?>>
+							<?php esc_html_e( 'All content', 'tn-user-management' ); ?>
+						</label>
+						<label>
+							<input type="radio" name="tn731_umg_content_access" value="own" <?php checked( 'own', $content_access ); ?>>
+							<?php esc_html_e( 'Own content only', 'tn-user-management' ); ?>
+						</label>
+					</fieldset>
+					<p class="description"><?php esc_html_e( 'Own content only can view all public content, but can edit, update, or delete only content authored by this user.', 'tn-user-management' ); ?></p>
+				</td>
+			</tr>
+		<?php endif; ?>
 	</table>
 	<?php
 }
@@ -355,5 +378,27 @@ function tn731_umg_save_user_permission_sets_field( $user_id ) {
 		: array();
 
 	update_user_meta( $user_id, 'tn731_umg_permission_sets', $sets );
+
+	if ( tn731_umg_can_manage_user_content_access( $user_id ) && isset( $_POST['tn731_umg_content_access'] ) && is_scalar( $_POST['tn731_umg_content_access'] ) ) {
+		$content_access = sanitize_key( wp_unslash( $_POST['tn731_umg_content_access'] ) );
+		$content_access = in_array( $content_access, array( 'all', 'own' ), true ) ? $content_access : 'all';
+		update_user_meta( $user_id, 'tn731_umg_content_access', $content_access );
+	}
+
 	clean_user_cache( $user_id );
+}
+
+function tn731_umg_can_manage_user_content_access( $user_id ) {
+
+	if ( ! current_user_can( 'edit_user', $user_id ) ) {
+		return false;
+	}
+
+	$current_user = wp_get_current_user();
+
+	if ( is_multisite() && is_super_admin( $current_user->ID ) ) {
+		return true;
+	}
+
+	return in_array( 'administrator', (array) $current_user->roles, true );
 }

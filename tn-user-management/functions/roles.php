@@ -126,17 +126,25 @@ function tn731_umg_handle_capability_action() {
 	exit;
 }
 
-function tn731_umg_get_capability_groups( $rows ) {
+function tn731_umg_get_capability_groups( $rows, $manual_capabilities = array() ) {
 
 	$rows_by_prefix = array();
+	$groups         = array(
+		'Singles' => array(),
+		'Custom'  => array(),
+	);
 
 	foreach ( $rows as $row ) {
+		if ( in_array( $row['cap'], $manual_capabilities, true ) ) {
+			$groups['Custom'][] = $row;
+			continue;
+		}
+
 		$parts  = explode( '_', $row['cap'], 2 );
 		$prefix = $parts[0];
 		$rows_by_prefix[ $prefix ][] = $row;
 	}
 
-	$groups        = array( 'Singles' => array() );
 	$prefix_groups = array();
 
 	foreach ( $rows_by_prefix as $prefix => $prefix_rows ) {
@@ -153,7 +161,14 @@ function tn731_umg_get_capability_groups( $rows ) {
 }
 
 function tn731_umg_get_capability_group_details( $group ) {
-	$title = 'Singles' === $group ? 'Single capabilities' : $group . '_*';
+	if ( 'Singles' === $group ) {
+		$title = 'Single capabilities';
+	} elseif ( 'Custom' === $group ) {
+		$title = 'Custom capabilities';
+	} else {
+		$title = $group . '_*';
+	}
+
 	$id    = 'tn731-umg-capability-group-' . sanitize_html_class( strtolower( $group ) );
 
 	return array(
@@ -268,8 +283,8 @@ function tn731_umg_render_capabilities_page() {
 		}
 	}
 
-	$groups              = tn731_umg_get_capability_groups( $rows );
 	$manual_capabilities = tn731_umg_get_manual_capabilities();
+	$groups              = tn731_umg_get_capability_groups( $rows, $manual_capabilities );
 	$base_url            = tn731_umg_get_capabilities_page_url();
 	$notice_value        = isset( $_GET['capability_notice'] ) && is_scalar( $_GET['capability_notice'] ) ? $_GET['capability_notice'] : '';
 	$notice              = sanitize_key( wp_unslash( $notice_value ) );

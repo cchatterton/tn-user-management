@@ -42,6 +42,11 @@
 	break-inside: avoid;
 }
 
+.tn731-umg-content-access-options label {
+	display: block;
+	margin: 0 0 8px;
+}
+
 .tn731-umg-user-list {
 	max-height: 360px;
 	overflow: auto;
