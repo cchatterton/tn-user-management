@@ -396,6 +396,55 @@ function tn731_umg_on_initialize_site( $new_site ) {
 |--------------------------------------------------------------------------
 */
 
+/**
+ * Ensure the user performing activation cannot lose administrative access.
+ *
+ * On multisite, Super Admin is granted before site roles are changed, then the
+ * user is explicitly made an Administrator on every existing site. On a
+ * single site, the user is made an Administrator immediately.
+ *
+ * @param int $user_id Activating user ID.
+ * @return bool Whether access could be enforced for a valid user.
+ */
+function tn731_umg_enforce_activating_user_access( $user_id ) {
+
+	$user_id = absint( $user_id );
+
+	if ( ! $user_id || ! get_userdata( $user_id ) ) {
+		return false;
+	}
+
+	if ( ! is_multisite() ) {
+		$user = new WP_User( $user_id );
+		$user->set_role( 'administrator' );
+		clean_user_cache( $user_id );
+		return true;
+	}
+
+	if ( ! is_super_admin( $user_id ) ) {
+		grant_super_admin( $user_id );
+	}
+
+	foreach ( tn731_umg_get_site_ids() as $site_id ) {
+		$site_id = (int) $site_id;
+
+		if ( ! is_user_member_of_blog( $user_id, $site_id ) ) {
+			add_user_to_blog( $site_id, $user_id, 'administrator' );
+			continue;
+		}
+
+		switch_to_blog( $site_id );
+		$user = new WP_User( $user_id );
+		$user->set_role( 'administrator' );
+		clean_user_cache( $user_id );
+		restore_current_blog();
+	}
+
+	clean_user_cache( $user_id );
+
+	return is_super_admin( $user_id );
+}
+
 function tn731_umg_add_super_admins_to_all_sites() {
 
 	if ( ! is_multisite() ) {
@@ -451,14 +500,14 @@ function tn731_umg_run_site_role_migration( $site_id ) {
 	$users = get_users(
 		array(
 			'blog_id' => $site_id,
-			'fields'  => array( 'ID', 'roles' ),
+			'fields'  => 'ids',
 			'number'  => 999999,
 		)
 	);
 
 	if ( ! empty( $users ) ) {
-		foreach ( $users as $user ) {
-			tn731_umg_normalise_user_role( $user->ID );
+		foreach ( $users as $user_id ) {
+			tn731_umg_normalise_user_role( $user_id );
 		}
 	}
 
@@ -472,7 +521,7 @@ function tn731_umg_run_single_site_role_migration() {
 
 	$users = get_users(
 		array(
-			'fields' => array( 'ID', 'roles' ),
+			'fields' => 'ids',
 			'number' => 999999,
 		)
 	);
@@ -481,8 +530,8 @@ function tn731_umg_run_single_site_role_migration() {
 		return;
 	}
 
-	foreach ( $users as $user ) {
-		tn731_umg_normalise_user_role( $user->ID );
+	foreach ( $users as $user_id ) {
+		tn731_umg_normalise_user_role( $user_id );
 	}
 }
 
@@ -548,7 +597,7 @@ function tn731_umg_assign_no_role_users_to_subscriber_current_site() {
 
 	$users = get_users(
 		array(
-			'fields' => array( 'ID', 'roles' ),
+			'fields' => 'ids',
 			'number' => 999999,
 		)
 	);
@@ -557,22 +606,22 @@ function tn731_umg_assign_no_role_users_to_subscriber_current_site() {
 		return;
 	}
 
-	foreach ( $users as $user ) {
+	foreach ( $users as $user_id ) {
 
-		if ( get_user_meta( $user->ID, 'tn731_umg_reference_user', true ) === '1' ) {
+		if ( get_user_meta( $user_id, 'tn731_umg_reference_user', true ) === '1' ) {
 			continue;
 		}
 
-		if ( is_multisite() && is_super_admin( $user->ID ) ) {
+		if ( is_multisite() && is_super_admin( $user_id ) ) {
 			continue;
 		}
 
-		$roles = (array) $user->roles;
+		$wp_user = new WP_User( $user_id );
+		$roles   = (array) $wp_user->roles;
 
 		if ( empty( $roles ) ) {
-			$wp_user = new WP_User( $user->ID );
 			$wp_user->set_role( 'subscriber' );
-			clean_user_cache( $user->ID );
+			clean_user_cache( $user_id );
 		}
 	}
 }

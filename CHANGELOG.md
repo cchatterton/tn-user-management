@@ -2,6 +2,15 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.12 - 2026-08-01
+
+- Enforced Administrator access for the activating user before role processing begins.
+- Granted the activating user Super Admin access and Administrator membership on every existing site in multisite.
+- Re-established access after username migration and refreshed changed-login authentication cookies to prevent activation logout.
+- Kept multisite's login-based Super Admin list aligned when usernames are migrated to email addresses.
+- Limited username migration execution to once per activation request and made its result notice display only once.
+- Removed activation warnings caused by requesting unsupported role fields from WordPress user queries.
+
 ## 1.11 - 2026-08-01
 
 - Added a dedicated Custom capability group for capabilities created through the plugin.

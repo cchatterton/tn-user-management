@@ -3,7 +3,7 @@
  * Plugin Name: TN User Management
  * Plugin URI: https://github.com/cchatterton/tn-user-management/releases/latest
  * Description: Email-as-username, one-time username migration, role normalisation, permission sets, and multisite user governance.
- * Version: 1.11
+ * Version: 1.12
  * Requires at least: 6.0
  * Requires PHP: 8.1
  * Update URI: https://github.com/cchatterton/tn-user-management
@@ -23,7 +23,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 define( 'TN731_UMG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'TN731_UMG_URL', plugin_dir_url( __FILE__ ) );
-define( 'TN731_UMG_VERSION', '1.11' );
+define( 'TN731_UMG_VERSION', '1.12' );
 define( 'TN731_UMG_ROLE_SCHEMA_VERSION', '1.0' );
 define( 'TN731_UMG_SITE_ROLE', 'administrator' );
 define( 'TN731_UMG_PLUGIN_FILE', __FILE__ );
@@ -53,26 +53,43 @@ register_activation_hook( __FILE__, 'tn731_umg_on_activation' );
 
 function tn731_umg_on_activation( $network_wide ) {
 
+	delete_site_option( 'tn731_umg_activation_notice' );
+
+	$activating_user       = wp_get_current_user();
+	$activating_user_id    = (int) $activating_user->ID;
+	$activating_user_login = (string) $activating_user->user_login;
+	$activation_token      = wp_get_session_token();
+	$activation_cookie     = wp_parse_auth_cookie( '', 'logged_in' );
+
 	/*
 	|--------------------------------------------------------------------------
-	| 1. Ensure baseline roles exist
+	| 1. Preserve the activating user's access before changing any roles
+	|--------------------------------------------------------------------------
+	*/
+	if ( function_exists( 'tn731_umg_enforce_activating_user_access' ) ) {
+		tn731_umg_enforce_activating_user_access( $activating_user_id );
+	}
+
+	/*
+	|--------------------------------------------------------------------------
+	| 2. Ensure baseline roles exist
 	|--------------------------------------------------------------------------
 	*/
 	if ( function_exists( 'tn731_umg_ensure_baseline_roles' ) ) {
 		tn731_umg_ensure_baseline_roles( $network_wide );
 	}
 
-    if ( function_exists( 'tn731_umg_assign_no_role_users_to_subscriber_all_sites' ) ) {
-    	if ( is_multisite() && $network_wide ) {
-    		tn731_umg_assign_no_role_users_to_subscriber_all_sites();
-    	} else {
-    		tn731_umg_assign_no_role_users_to_subscriber_current_site();
-    	}
-    }
+	if ( function_exists( 'tn731_umg_assign_no_role_users_to_subscriber_all_sites' ) ) {
+		if ( is_multisite() && $network_wide ) {
+			tn731_umg_assign_no_role_users_to_subscriber_all_sites();
+		} else {
+			tn731_umg_assign_no_role_users_to_subscriber_current_site();
+		}
+	}
 
 	/*
 	|--------------------------------------------------------------------------
-	| 2. Ensure User role matches Administrator + reference user exists
+	| 3. Ensure User role matches Administrator + reference user exists
 	|--------------------------------------------------------------------------
 	*/
 	if ( function_exists( 'tn731_umg_sync_user_role_from_admin_all_sites' ) && function_exists( 'tn731_umg_sync_user_role_from_admin_current_site' ) ) {
@@ -85,17 +102,36 @@ function tn731_umg_on_activation( $network_wide ) {
 
 	/*
 	|--------------------------------------------------------------------------
-	| 3. Migrate existing usernames to email
+	| 4. Migrate existing usernames to email
 	|--------------------------------------------------------------------------
 	*/
 	if ( function_exists( 'tn731_umg_migrate_existing_usernames' ) ) {
-		tn731_umg_migrate_existing_usernames();
+		$migration_result = tn731_umg_migrate_existing_usernames();
+
+		if ( is_array( $migration_result ) ) {
+			update_site_option( 'tn731_umg_activation_notice', $migration_result );
+		}
+
 		update_site_option( 'tn731_umg_usernames_migrated', current_time( 'mysql' ) );
+	}
+
+	if ( function_exists( 'tn731_umg_refresh_activating_user_session' ) ) {
+		tn731_umg_refresh_activating_user_session(
+			$activating_user_id,
+			$activating_user_login,
+			$activation_token,
+			$activation_cookie
+		);
+	}
+
+	// Username migration can change the login stored for a Super Admin.
+	if ( function_exists( 'tn731_umg_enforce_activating_user_access' ) ) {
+		tn731_umg_enforce_activating_user_access( $activating_user_id );
 	}
 
 	/*
 	|--------------------------------------------------------------------------
-	| 4. Role migration / multisite sync
+	| 5. Role migration / multisite sync
 	|--------------------------------------------------------------------------
 	*/
 	if ( is_multisite() && $network_wide ) {
@@ -243,22 +279,14 @@ function tn731_umg_admin_notice() {
 		echo '<div class="notice notice-success is-dismissible"><p><strong>TN User Management</strong>: Baseline roles checked and User role synced from Administrator successfully.</p></div>';
 	}
 
-	$result = get_site_option( 'tn731_umg_migration_result' );
+	$result = get_site_option( 'tn731_umg_activation_notice' );
 
 	if ( empty( $result ) || ! is_array( $result ) ) {
 		return;
 	}
 
-	$dismissed = get_site_option( 'tn731_umg_notice_dismissed' );
-
-	if ( $dismissed === $result['ran'] ) {
-		return;
-	}
-
-	$url = wp_nonce_url(
-		add_query_arg( 'tn731_umg_dismiss_notice', '1' ),
-		'tn731_umg_dismiss_notice'
-	);
+	// Consume the activation result before rendering so it can only appear once.
+	delete_site_option( 'tn731_umg_activation_notice' );
 
 	echo '<div class="notice notice-info is-dismissible">';
 	echo '<p><strong>TN User Management</strong>: Username migration ran at '
@@ -267,44 +295,6 @@ function tn731_umg_admin_notice() {
 		. intval( $result['updated'] )
 		. '. Skipped: '
 		. intval( $result['skipped'] )
-		. '. <a href="' . esc_url( $url ) . '">Dismiss</a></p>';
+		. '.</p>';
 	echo '</div>';
-}
-
-add_action( 'admin_init', 'tn731_umg_handle_notice_dismiss' );
-
-function tn731_umg_handle_notice_dismiss() {
-
-	$dismiss_notice = isset( $_GET['tn731_umg_dismiss_notice'] )
-		? sanitize_text_field( wp_unslash( $_GET['tn731_umg_dismiss_notice'] ) )
-		: '';
-
-	if ( empty( $dismiss_notice ) ) {
-		return;
-	}
-
-	$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
-
-	if ( ! wp_verify_nonce( $nonce, 'tn731_umg_dismiss_notice' ) ) {
-		return;
-	}
-
-	if ( is_multisite() ) {
-		if ( ! current_user_can( 'manage_network_options' ) ) {
-			return;
-		}
-	} else {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-	}
-
-	$result = get_site_option( 'tn731_umg_migration_result' );
-
-	if ( ! empty( $result['ran'] ) ) {
-		update_site_option( 'tn731_umg_notice_dismissed', $result['ran'] );
-	}
-
-	wp_safe_redirect( remove_query_arg( array( 'tn731_umg_dismiss_notice', '_wpnonce' ) ) );
-	exit;
 }

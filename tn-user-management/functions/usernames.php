@@ -88,6 +88,11 @@ function tn731_umg_validate_email_as_username( $result ) {
  */
 function tn731_umg_migrate_existing_usernames() {
 	global $wpdb;
+	static $activation_result = null;
+
+	if ( null !== $activation_result ) {
+		return $activation_result;
+	}
 
 	$updated = 0;
 	$skipped = 0;
@@ -101,21 +106,22 @@ function tn731_umg_migrate_existing_usernames() {
 	);
 
 	if ( empty( $users ) ) {
-		update_site_option(
-			'tn731_umg_migration_result',
-			array(
-				'ran'     => current_time( 'mysql' ),
-				'updated' => 0,
-				'skipped' => 0,
-			)
+		$activation_result = array(
+			'ran'     => current_time( 'mysql' ),
+			'updated' => 0,
+			'skipped' => 0,
 		);
-		return;
+
+		update_site_option( 'tn731_umg_migration_result', $activation_result );
+		return $activation_result;
 	}
 
 	foreach ( $users as $user ) {
-		$user_id = (int) $user->ID;
-		$email   = strtolower( trim( (string) $user->user_email ) );
-		$login   = strtolower( trim( (string) $user->user_login ) );
+		$user_id         = (int) $user->ID;
+		$previous_login  = (string) $user->user_login;
+		$email           = strtolower( trim( (string) $user->user_email ) );
+		$login           = strtolower( trim( $previous_login ) );
+		$was_super_admin = is_multisite() && is_super_admin( $user_id );
 
 		if ( empty( $email ) ) {
 			$skipped++;
@@ -160,6 +166,11 @@ function tn731_umg_migrate_existing_usernames() {
 
 		if ( false !== $result ) {
 			clean_user_cache( $user_id );
+
+			if ( $was_super_admin ) {
+				tn731_umg_update_super_admin_login( $previous_login, $email );
+			}
+
 			$updated++;
 		} else {
 			$skipped++;
@@ -168,12 +179,87 @@ function tn731_umg_migrate_existing_usernames() {
 
 	wp_cache_flush();
 
-	update_site_option(
-		'tn731_umg_migration_result',
-		array(
-			'ran'     => current_time( 'mysql' ),
-			'updated' => $updated,
-			'skipped' => $skipped,
-		)
+	$activation_result = array(
+		'ran'     => current_time( 'mysql' ),
+		'updated' => $updated,
+		'skipped' => $skipped,
 	);
+
+	update_site_option( 'tn731_umg_migration_result', $activation_result );
+	return $activation_result;
+}
+
+/**
+ * Keep multisite's login-based Super Admin list aligned with a migrated login.
+ *
+ * @param string $previous_login Login before migration.
+ * @param string $new_login      Login after migration.
+ * @return bool Whether the network option was updated.
+ */
+function tn731_umg_update_super_admin_login( $previous_login, $new_login ) {
+
+	if ( ! is_multisite() || empty( $previous_login ) || empty( $new_login ) ) {
+		return false;
+	}
+
+	$super_admins = get_site_option( 'site_admins', array() );
+
+	if ( ! is_array( $super_admins ) ) {
+		return false;
+	}
+
+	$updated = false;
+
+	foreach ( $super_admins as $index => $login ) {
+		if ( (string) $login !== (string) $previous_login ) {
+			continue;
+		}
+
+		$super_admins[ $index ] = $new_login;
+		$updated                = true;
+	}
+
+	if ( ! $updated ) {
+		return false;
+	}
+
+	$super_admins = array_values( array_unique( $super_admins ) );
+
+	return update_site_option( 'site_admins', $super_admins );
+}
+
+/**
+ * Reissue the activating user's cookies if username migration changed the
+ * login embedded in their existing authentication cookies.
+ *
+ * @param int         $user_id        Activating user ID.
+ * @param string      $previous_login Login captured before migration.
+ * @param string      $session_token  Existing session token.
+ * @param array|false $cookie         Parsed logged-in cookie data.
+ * @return bool Whether the session needed to be refreshed.
+ */
+function tn731_umg_refresh_activating_user_session( $user_id, $previous_login, $session_token, $cookie ) {
+
+	$user_id = absint( $user_id );
+
+	if ( ! $user_id || empty( $session_token ) ) {
+		return false;
+	}
+
+	clean_user_cache( $user_id );
+	$user = get_userdata( $user_id );
+
+	if ( ! $user || (string) $user->user_login === (string) $previous_login ) {
+		return false;
+	}
+
+	$remember = is_array( $cookie )
+		&& ! empty( $cookie['expiration'] )
+		&& (int) $cookie['expiration'] > time() + ( 2 * DAY_IN_SECONDS );
+
+	wp_set_current_user( 0 );
+	wp_set_current_user( $user_id );
+	wp_set_auth_cookie( $user_id, $remember, is_ssl(), $session_token );
+
+	return true;
 }

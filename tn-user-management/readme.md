@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.11
+- Version: 1.12
 - Status: Production
 
 ## Purpose
@@ -19,6 +19,7 @@ TN User Management provides email-as-username handling, one-time username migrat
 - Supports per-user All content or Own content only editing rules across public post types.
 - Supports native WordPress updates from public GitHub releases.
 - Supports WordPress multisite and network activation.
+- Preserves the activating user's Administrator access and grants Super Admin plus per-site Administrator access on multisite.
 
 ## Folder Structure
 
@@ -37,6 +38,7 @@ tn-user-management/
 - Integration accounts are intentionally blocked from authentication and have all effective capabilities denied.
 - Capabilities created on the Capabilities page are tracked in the `tn731_umg_manual_capabilities` option so only those capabilities can be removed there.
 - Per-user content access is stored in `tn731_umg_content_access`; missing or invalid values default to unrestricted All content access.
+- Username migration runs once in each activation request, and its activation result notice is consumed after one display.
 - GitHub updates require a public release tagged with the plugin version and an attached asset named `tn-user-management.zip`.
 
 ## Future Considerations
