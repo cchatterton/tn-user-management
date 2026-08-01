@@ -2,6 +2,15 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.9 - 2026-08-01
+
+- Added a fourth, database-only Integration role with no capabilities or login access.
+- Renamed the Roles page to Capabilities and added capability creation and removal controls.
+- Added prefix-based capability table grouping, with ungrouped capabilities shown first.
+- Added View details, GitHub, and nonce-protected Check for updates plugin-row links.
+- Brought the GitHub updater metadata, caching, forced checks, native update injection, diagnostics, and post-update cleanup in line with the Codex standards.
+- Tightened nonce handling, admin asset loading, and accessibility markup.
+
 ## 1.8 - 2026-06-14
 
 - Updated the GitHub release updater to clear stale same-version update notices.

@@ -263,7 +263,11 @@ function tn731_umg_save_permission_set_meta( $post_id ) {
 		return;
 	}
 
-	if ( empty( $_POST['tn731_umg_permission_set_nonce'] ) || ! wp_verify_nonce( $_POST['tn731_umg_permission_set_nonce'], 'tn731_umg_save_permission_set' ) ) {
+	$nonce = isset( $_POST['tn731_umg_permission_set_nonce'] ) && is_scalar( $_POST['tn731_umg_permission_set_nonce'] )
+		? sanitize_text_field( wp_unslash( $_POST['tn731_umg_permission_set_nonce'] ) )
+		: '';
+
+	if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, 'tn731_umg_save_permission_set' ) ) {
 		return;
 	}
 
@@ -307,7 +311,7 @@ function tn731_umg_show_user_permission_sets_field( $user ) {
 	<h2>Permission Sets</h2>
 	<table class="form-table" role="presentation">
 		<tr>
-			<th><label>Assigned Permission Sets</label></th>
+			<th scope="row">Assigned Permission Sets</th>
 			<td>
 				<?php if ( empty( $sets ) ) : ?>
 					<p>No permission sets found.</p>
@@ -338,7 +342,11 @@ function tn731_umg_save_user_permission_sets_field( $user_id ) {
 		return;
 	}
 
-	if ( empty( $_POST['tn731_umg_user_permission_sets_nonce'] ) || ! wp_verify_nonce( $_POST['tn731_umg_user_permission_sets_nonce'], 'tn731_umg_save_user_permission_sets' ) ) {
+	$nonce = isset( $_POST['tn731_umg_user_permission_sets_nonce'] ) && is_scalar( $_POST['tn731_umg_user_permission_sets_nonce'] )
+		? sanitize_text_field( wp_unslash( $_POST['tn731_umg_user_permission_sets_nonce'] ) )
+		: '';
+
+	if ( empty( $nonce ) || ! wp_verify_nonce( $nonce, 'tn731_umg_save_user_permission_sets' ) ) {
 		return;
 	}
 

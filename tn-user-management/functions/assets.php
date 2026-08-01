@@ -10,6 +10,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_action( 'admin_enqueue_scripts', 'tn731_umg_enqueue_admin_assets' );
 
 function tn731_umg_enqueue_admin_assets( $hook_suffix ) {
+	$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+	$is_permission_screen = $screen && 'tn731_permset' === $screen->post_type;
+	$is_user_screen       = in_array( $hook_suffix, array( 'user-new.php', 'user-edit.php', 'profile.php' ), true );
+
+	if ( ! $is_permission_screen && ! $is_user_screen ) {
+		return;
+	}
 
 	wp_enqueue_style(
 		'tn731-umg-admin',

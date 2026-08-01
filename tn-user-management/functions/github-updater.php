@@ -13,15 +13,18 @@ final class TN731_UMG_GitHub_Updater {
 	private const SLUG = 'tn-user-management';
 	private const ASSET_NAME = 'tn-user-management.zip';
 	private const RELEASE_TRANSIENT = 'tn731_umg_github_latest_release';
-	private const FAILED_TRANSIENT = 'tn731_umg_github_latest_release_failed';
+	private const ERROR_TRANSIENT = 'tn731_umg_github_latest_release_error';
 
 	public static function init() {
-		add_filter( 'pre_set_site_transient_update_plugins', array( __CLASS__, 'inject_update' ) );
+		add_filter( 'pre_set_site_transient_update_plugins', array( __CLASS__, 'add_update_data' ) );
+		add_filter( 'site_transient_update_plugins', array( __CLASS__, 'add_update_data' ) );
 		add_filter( 'plugins_api', array( __CLASS__, 'plugin_information' ), 10, 3 );
 		add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
+		add_action( 'admin_init', array( __CLASS__, 'handle_manual_update_check' ) );
+		add_action( 'upgrader_process_complete', array( __CLASS__, 'clear_cache_after_update' ), 10, 2 );
 	}
 
-	public static function inject_update( $transient ) {
+	public static function add_update_data( $transient ) {
 
 		if ( ! is_object( $transient ) ) {
 			return $transient;
@@ -37,16 +40,26 @@ final class TN731_UMG_GitHub_Updater {
 		$download_url = self::release_asset_url( $release );
 		$plugin_file  = plugin_basename( TN731_UMG_PLUGIN_FILE );
 
+		$transient->response = isset( $transient->response ) && is_array( $transient->response )
+			? $transient->response
+			: array();
+		$transient->no_update = isset( $transient->no_update ) && is_array( $transient->no_update )
+			? $transient->no_update
+			: array();
+
 		if ( empty( $version ) || empty( $download_url ) || ! version_compare( $version, TN731_UMG_VERSION, '>' ) ) {
-			return self::clear_stale_update( $transient, $plugin_file );
+			unset( $transient->response[ $plugin_file ] );
+			unset( $transient->no_update[ $plugin_file ] );
+			return $transient;
 		}
 
+		unset( $transient->no_update[ $plugin_file ] );
 		$transient->response[ $plugin_file ] = (object) array(
 			'id'           => self::repository_url(),
 			'slug'         => self::SLUG,
 			'plugin'       => $plugin_file,
 			'new_version'  => $version,
-			'url'          => self::repository_url(),
+			'url'          => self::release_page_url( $release ),
 			'package'      => $download_url,
 			'requires'     => '6.0',
 			'requires_php' => '8.1',
@@ -97,20 +110,98 @@ final class TN731_UMG_GitHub_Updater {
 			return $links;
 		}
 
+		$details_url = add_query_arg(
+			array(
+				'tab'       => 'plugin-information',
+				'plugin'    => self::SLUG,
+				'TB_iframe' => 'true',
+				'width'     => '600',
+				'height'    => '550',
+			),
+			self_admin_url( 'plugin-install.php' )
+		);
+
+		$links[] = sprintf(
+			'<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s">%s</a>',
+			esc_url( $details_url ),
+			esc_attr__( 'View TN User Management details', 'tn-user-management' ),
+			esc_html__( 'View details', 'tn-user-management' )
+		);
+
 		$links[] = sprintf(
 			'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
 			esc_url( self::repository_url() ),
 			esc_html__( 'GitHub', 'tn-user-management' )
 		);
 
+		if ( current_user_can( 'update_plugins' ) ) {
+			$plugins_url = is_multisite() ? network_admin_url( 'plugins.php' ) : admin_url( 'plugins.php' );
+			$check_url   = wp_nonce_url(
+				add_query_arg( 'tn731_umg_check_updates', '1', $plugins_url ),
+				'tn731_umg_check_updates'
+			);
+
+			$links[] = sprintf(
+				'<a href="%s">%s</a>',
+				esc_url( $check_url ),
+				esc_html__( 'Check for updates', 'tn-user-management' )
+			);
+		}
+
 		return $links;
+	}
+
+	public static function handle_manual_update_check() {
+
+		$should_check = isset( $_GET['tn731_umg_check_updates'] )
+			? sanitize_text_field( wp_unslash( $_GET['tn731_umg_check_updates'] ) )
+			: '';
+
+		if ( '1' !== $should_check ) {
+			return;
+		}
+
+		$nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+
+		if ( ! wp_verify_nonce( $nonce, 'tn731_umg_check_updates' ) ) {
+			wp_die( esc_html__( 'The update check request could not be verified.', 'tn-user-management' ) );
+		}
+
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			wp_die( esc_html__( 'You do not have permission to check for plugin updates.', 'tn-user-management' ) );
+		}
+
+		self::clear_release_cache();
+		delete_site_transient( 'update_plugins' );
+		wp_update_plugins();
+
+		$plugins_url = is_multisite() ? network_admin_url( 'plugins.php' ) : admin_url( 'plugins.php' );
+		wp_safe_redirect( $plugins_url );
+		exit;
+	}
+
+	public static function clear_cache_after_update( $upgrader, $options ) {
+
+		if ( empty( $options['action'] ) || 'update' !== $options['action'] || empty( $options['type'] ) || 'plugin' !== $options['type'] ) {
+			return;
+		}
+
+		$plugins = isset( $options['plugins'] ) ? (array) $options['plugins'] : array();
+		if ( ! empty( $options['plugin'] ) ) {
+			$plugins[] = $options['plugin'];
+		}
+
+		if ( in_array( plugin_basename( TN731_UMG_PLUGIN_FILE ), $plugins, true ) ) {
+			self::clear_release_cache();
+		}
 	}
 
 	private static function get_latest_release() {
 
-		if ( self::is_forced_update_check() ) {
-			delete_site_transient( self::RELEASE_TRANSIENT );
-			delete_site_transient( self::FAILED_TRANSIENT );
+		$forced_check = self::is_forced_update_check();
+
+		if ( $forced_check ) {
+			self::clear_release_cache();
 		}
 
 		$release = get_site_transient( self::RELEASE_TRANSIENT );
@@ -119,7 +210,7 @@ final class TN731_UMG_GitHub_Updater {
 			return $release;
 		}
 
-		if ( get_site_transient( self::FAILED_TRANSIENT ) ) {
+		if ( ! $forced_check && get_site_transient( self::ERROR_TRANSIENT ) ) {
 			return array();
 		}
 
@@ -134,52 +225,100 @@ final class TN731_UMG_GitHub_Updater {
 			)
 		);
 
-		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			set_site_transient( self::FAILED_TRANSIENT, 1, 30 * MINUTE_IN_SECONDS );
+		if ( is_wp_error( $response ) ) {
+			self::record_error(
+				array(
+					'type'    => 'wp_error',
+					'message' => $response->get_error_message(),
+				)
+			);
+			return array();
+		}
+
+		$response_code = wp_remote_retrieve_response_code( $response );
+
+		if ( 200 !== $response_code ) {
+			self::record_error(
+				array(
+					'type'    => 'http_error',
+					'code'    => $response_code,
+					'message' => wp_remote_retrieve_response_message( $response ),
+					'body'    => substr( wp_strip_all_tags( wp_remote_retrieve_body( $response ) ), 0, 500 ),
+				)
+			);
 			return array();
 		}
 
 		$release = json_decode( wp_remote_retrieve_body( $response ), true );
 
-		if ( ! is_array( $release ) ) {
-			set_site_transient( self::FAILED_TRANSIENT, 1, 30 * MINUTE_IN_SECONDS );
+		if ( ! is_array( $release ) || empty( self::release_version( $release ) ) ) {
+			self::record_error(
+				array(
+					'type'    => 'json_error',
+					'message' => __( 'GitHub returned release data without a valid version.', 'tn-user-management' ),
+				)
+			);
 			return array();
 		}
 
-		set_site_transient( self::RELEASE_TRANSIENT, $release, 6 * HOUR_IN_SECONDS );
-		delete_site_transient( self::FAILED_TRANSIENT );
+		$has_newer_package = version_compare( self::release_version( $release ), TN731_UMG_VERSION, '>' )
+			&& ! empty( self::release_asset_url( $release ) );
+		$cache_duration    = $has_newer_package ? 6 * HOUR_IN_SECONDS : 10 * MINUTE_IN_SECONDS;
+
+		set_site_transient( self::RELEASE_TRANSIENT, $release, $cache_duration );
+		delete_site_transient( self::ERROR_TRANSIENT );
 
 		return $release;
 	}
 
-	private static function clear_stale_update( $transient, $plugin_file ) {
+	private static function is_forced_update_check() {
 
-		if ( isset( $transient->response[ $plugin_file ] ) ) {
-			unset( $transient->response[ $plugin_file ] );
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			return false;
 		}
 
-		$transient->no_update[ $plugin_file ] = (object) array(
-			'id'           => self::repository_url(),
-			'slug'         => self::SLUG,
-			'plugin'       => $plugin_file,
-			'new_version'  => TN731_UMG_VERSION,
-			'url'          => self::repository_url(),
-			'package'      => '',
-			'requires'     => '6.0',
-			'requires_php' => '8.1',
-		);
+		$force_check = self::request_value( 'force-check' );
+		$action      = self::request_value( 'action' );
+		$action_two  = self::request_value( 'action2' );
+		$actions     = array( 'update-selected', 'upgrade-plugin', 'do-plugin-upgrade' );
 
-		return $transient;
+		return ( '' !== $force_check && '0' !== $force_check )
+			|| in_array( $action, $actions, true )
+			|| in_array( $action_two, $actions, true );
 	}
 
-	private static function is_forced_update_check() {
-		$force_check = isset( $_GET['force-check'] ) ? sanitize_text_field( wp_unslash( $_GET['force-check'] ) ) : '';
+	private static function request_value( $key ) {
 
-		return '1' === $force_check;
+		if ( isset( $_POST[ $key ] ) && is_scalar( $_POST[ $key ] ) ) {
+			return sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+		}
+
+		if ( isset( $_GET[ $key ] ) && is_scalar( $_GET[ $key ] ) ) {
+			return sanitize_text_field( wp_unslash( $_GET[ $key ] ) );
+		}
+
+		return '';
+	}
+
+	private static function record_error( $details ) {
+		$details['checked_at'] = time();
+		delete_site_transient( self::RELEASE_TRANSIENT );
+		set_site_transient( self::ERROR_TRANSIENT, $details, 10 * MINUTE_IN_SECONDS );
+	}
+
+	private static function clear_release_cache() {
+		delete_site_transient( self::RELEASE_TRANSIENT );
+		delete_site_transient( self::ERROR_TRANSIENT );
 	}
 
 	private static function release_version( $release ) {
-		return ltrim( (string) ( $release['tag_name'] ?? '' ), 'vV' );
+		$version = ltrim( (string) ( $release['tag_name'] ?? '' ), 'vV' );
+
+		if ( ! preg_match( '/^\d+(?:\.\d+)+(?:[-+][0-9A-Za-z.-]+)?$/', $version ) ) {
+			return '';
+		}
+
+		return $version;
 	}
 
 	private static function release_asset_url( $release ) {
@@ -199,6 +338,12 @@ final class TN731_UMG_GitHub_Updater {
 
 	private static function repository_url() {
 		return 'https://github.com/' . self::OWNER . '/' . self::REPO;
+	}
+
+	private static function release_page_url( $release ) {
+		return ! empty( $release['html_url'] )
+			? esc_url_raw( (string) $release['html_url'] )
+			: self::repository_url() . '/releases/latest';
 	}
 }
 

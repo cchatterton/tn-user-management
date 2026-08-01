@@ -8,11 +8,60 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 |
 | - administrator and subscriber are repaired if missing
 | - user role must match administrator
+| - integration role has no capabilities and cannot authenticate
 | - permission set menu model is based on a hidden reference user
 | - reference user is ensured on activation and Sync Admin Rights
 | - roles are no longer deleted
 |
 */
+
+/*
+|--------------------------------------------------------------------------
+| Integration Role Access Lock
+|--------------------------------------------------------------------------
+*/
+
+add_filter( 'authenticate', 'tn731_umg_block_integration_authentication', 100, 3 );
+
+function tn731_umg_block_integration_authentication( $user, $username, $password ) {
+
+	if ( $user instanceof WP_User && in_array( 'integration', (array) $user->roles, true ) ) {
+		return new WP_Error(
+			'tn731_umg_integration_login_disabled',
+			__( 'This integration account cannot be used to log in.', 'tn-user-management' )
+		);
+	}
+
+	return $user;
+}
+
+add_action( 'init', 'tn731_umg_end_integration_user_sessions', -1 );
+
+function tn731_umg_end_integration_user_sessions() {
+
+	if ( ! is_user_logged_in() ) {
+		return;
+	}
+
+	$user = wp_get_current_user();
+
+	if ( in_array( 'integration', (array) $user->roles, true ) ) {
+		wp_logout();
+	}
+}
+
+add_filter( 'user_has_cap', 'tn731_umg_remove_integration_user_caps', 999, 4 );
+
+function tn731_umg_remove_integration_user_caps( $allcaps, $caps, $args, $user ) {
+
+	if ( $user instanceof WP_User && in_array( 'integration', (array) $user->roles, true ) ) {
+		foreach ( $allcaps as $capability => $grant ) {
+			$allcaps[ $capability ] = false;
+		}
+	}
+
+	return $allcaps;
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -215,7 +264,29 @@ function tn731_umg_ensure_baseline_roles_current_site() {
 		populate_roles();
 	}
 
+	$integration_role = get_role( 'integration' );
+
+	if ( ! $integration_role ) {
+		add_role( 'integration', 'Integration', array() );
+	} else {
+		foreach ( array_keys( (array) $integration_role->capabilities ) as $capability ) {
+			$integration_role->remove_cap( $capability );
+		}
+	}
+
 	tn731_umg_sync_user_role_from_admin();
+	update_option( 'tn731_umg_role_schema_version', TN731_UMG_ROLE_SCHEMA_VERSION, false );
+}
+
+add_action( 'init', 'tn731_umg_maybe_upgrade_roles', 1 );
+
+function tn731_umg_maybe_upgrade_roles() {
+
+	if ( TN731_UMG_ROLE_SCHEMA_VERSION === get_option( 'tn731_umg_role_schema_version' ) ) {
+		return;
+	}
+
+	tn731_umg_ensure_baseline_roles_current_site();
 }
 
 /*
@@ -429,13 +500,19 @@ function tn731_umg_normalise_user_role( $user_id ) {
 		return;
 	}
 
+	$roles = (array) $user->roles;
+
+	if ( in_array( 'integration', $roles, true ) ) {
+		$user->set_role( 'integration' );
+		clean_user_cache( $user_id );
+		return;
+	}
+
 	if ( is_multisite() && is_super_admin( $user_id ) ) {
 		$user->set_role( 'administrator' );
 		clean_user_cache( $user_id );
 		return;
 	}
-
-	$roles = (array) $user->roles;
 
 	if ( in_array( 'administrator', $roles, true ) ) {
 		$user->set_role( 'administrator' );

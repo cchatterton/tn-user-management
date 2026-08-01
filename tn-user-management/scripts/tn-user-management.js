@@ -8,6 +8,14 @@
 	document.addEventListener('click', function(event) {
 		var target = event.target;
 
+		if (target.classList.contains('tn731-umg-confirm-remove-capability')) {
+			if (!window.confirm('Remove this capability from Administrator and User?')) {
+				event.preventDefault();
+			}
+
+			return;
+		}
+
 		if (!target.classList.contains('tn731-umg-select-all') && !target.classList.contains('tn731-umg-deselect-all')) {
 			return;
 		}
