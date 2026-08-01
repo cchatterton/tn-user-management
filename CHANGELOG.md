@@ -2,6 +2,13 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.10 - 2026-08-01
+
+- Aligned capability columns consistently across every grouped table.
+- Replaced the visible Action heading and empty placeholders with a blank utility column.
+- Replaced capability removal buttons with accessible trash icons.
+- Added quick links to every capability section below the role summary.
+
 ## 1.9 - 2026-08-01
 
 - Added a fourth, database-only Integration role with no capabilities or login access.

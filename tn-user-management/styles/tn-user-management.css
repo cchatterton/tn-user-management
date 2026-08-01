@@ -80,6 +80,19 @@
 
 .tn731-umg-table {
 	margin-top: 16px;
+	table-layout: fixed;
+}
+
+.tn731-umg-table .tn731-umg-capability-col {
+	width: 44%;
+}
+
+.tn731-umg-table .tn731-umg-role-col {
+	width: 12%;
+}
+
+.tn731-umg-table .tn731-umg-action-col {
+	width: 8%;
 }
 
 .tn731-umg-table th,
@@ -91,12 +104,25 @@
 	text-align: left;
 }
 
+.tn731-umg-table .tn731-umg-capability-column code {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+
 .tn731-umg-diff-row {
 	background: #fff8e5;
 }
 
 .tn731-umg-capability-heading {
 	margin-top: 24px;
+	scroll-margin-top: 40px;
+}
+
+.tn731-umg-section-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 8px;
+	margin: 8px 0 18px;
 }
 
 .tn731-umg-add-capability-form {
@@ -111,8 +137,28 @@
 }
 
 .tn731-umg-table .tn731-umg-action-column {
-	width: 100px;
-	text-align: left;
+	text-align: center;
+}
+
+.tn731-umg-remove-capability {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 32px;
+	min-height: 32px;
+	cursor: pointer;
+	color: #b32d2e;
+	text-decoration: none;
+}
+
+.tn731-umg-remove-capability:hover,
+.tn731-umg-remove-capability:focus {
+	color: #8a2424;
+}
+
+.tn731-umg-remove-capability .dashicons {
+	font-size: 18px;
+	line-height: 1;
 }
 
 @media screen and (max-width: 782px) {

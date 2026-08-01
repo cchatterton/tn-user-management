@@ -152,10 +152,28 @@ function tn731_umg_get_capability_groups( $rows ) {
 	return array_merge( $groups, $prefix_groups );
 }
 
-function tn731_umg_render_capability_table( $title, $rows, $manual_capabilities, $show ) {
+function tn731_umg_get_capability_group_details( $group ) {
+	$title = 'Singles' === $group ? 'Single capabilities' : $group . '_*';
+	$id    = 'tn731-umg-capability-group-' . sanitize_html_class( strtolower( $group ) );
+
+	return array(
+		'id'    => $id,
+		'title' => $title,
+	);
+}
+
+function tn731_umg_render_capability_table( $title, $section_id, $rows, $manual_capabilities, $show ) {
 	?>
-	<h2 class="tn731-umg-capability-heading"><?php echo esc_html( $title ); ?></h2>
+	<h2 id="<?php echo esc_attr( $section_id ); ?>" class="tn731-umg-capability-heading"><?php echo esc_html( $title ); ?></h2>
 	<table class="widefat striped tn731-umg-table">
+		<colgroup>
+			<col class="tn731-umg-capability-col">
+			<col class="tn731-umg-role-col">
+			<col class="tn731-umg-role-col">
+			<col class="tn731-umg-role-col">
+			<col class="tn731-umg-role-col">
+			<col class="tn731-umg-action-col">
+		</colgroup>
 		<thead>
 			<tr>
 				<th class="tn731-umg-capability-column"><?php esc_html_e( 'Capability', 'tn-user-management' ); ?></th>
@@ -163,7 +181,7 @@ function tn731_umg_render_capability_table( $title, $rows, $manual_capabilities,
 				<th><?php esc_html_e( 'User', 'tn-user-management' ); ?></th>
 				<th><?php esc_html_e( 'Subscriber', 'tn-user-management' ); ?></th>
 				<th><?php esc_html_e( 'Integration', 'tn-user-management' ); ?></th>
-				<th class="tn731-umg-action-column"><?php esc_html_e( 'Action', 'tn-user-management' ); ?></th>
+				<th class="tn731-umg-action-column"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'tn-user-management' ); ?></span></th>
 			</tr>
 		</thead>
 		<tbody>
@@ -184,10 +202,11 @@ function tn731_umg_render_capability_table( $title, $rows, $manual_capabilities,
 							<input type="hidden" name="tn731_umg_capability_action" value="remove">
 							<input type="hidden" name="capability" value="<?php echo esc_attr( $row['cap'] ); ?>">
 							<input type="hidden" name="show" value="<?php echo esc_attr( $show ); ?>">
-							<button type="submit" class="button button-small tn731-umg-confirm-remove-capability"><?php esc_html_e( 'Remove', 'tn-user-management' ); ?></button>
+							<button type="submit" class="button-link-delete tn731-umg-remove-capability tn731-umg-confirm-remove-capability" aria-label="<?php echo esc_attr( sprintf( __( 'Remove capability %s', 'tn-user-management' ), $row['cap'] ) ); ?>" title="<?php esc_attr_e( 'Remove capability', 'tn-user-management' ); ?>">
+								<span class="dashicons dashicons-trash" aria-hidden="true"></span>
+								<span class="screen-reader-text"><?php esc_html_e( 'Remove', 'tn-user-management' ); ?></span>
+							</button>
 						</form>
-					<?php else : ?>
-						&mdash;
 					<?php endif; ?>
 					</td>
 				</tr>
@@ -277,6 +296,17 @@ function tn731_umg_render_capabilities_page() {
 			&nbsp;|&nbsp; <strong><?php esc_html_e( 'Subscriber:', 'tn-user-management' ); ?></strong> <?php echo $roles['sub'] ? esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['sub'] ) ) ) ) : esc_html__( 'Missing', 'tn-user-management' ); ?>
 			&nbsp;|&nbsp; <strong><?php esc_html_e( 'Integration:', 'tn-user-management' ); ?></strong> <?php echo $roles['integration'] ? esc_html__( 'Registered (0)', 'tn-user-management' ) : esc_html__( 'Missing', 'tn-user-management' ); ?>
 		</p>
+		<nav class="tn731-umg-section-links" aria-label="<?php esc_attr_e( 'Capability sections', 'tn-user-management' ); ?>">
+			<strong><?php esc_html_e( 'Sections:', 'tn-user-management' ); ?></strong>
+			<?php $section_number = 0; ?>
+			<?php foreach ( $groups as $group => $group_rows ) : ?>
+				<?php $group_details = tn731_umg_get_capability_group_details( $group ); ?>
+				<?php if ( $section_number > 0 ) : ?><span aria-hidden="true">|</span><?php endif; ?>
+				<a href="#<?php echo esc_attr( $group_details['id'] ); ?>"><?php echo esc_html( $group_details['title'] ); ?></a>
+				<?php $section_number++; ?>
+			<?php endforeach; ?>
+		</nav>
+
 		<p><em><?php esc_html_e( 'Integration is a database-only role. It has no capabilities and accounts assigned to it cannot log in.', 'tn-user-management' ); ?></em></p>
 
 		<h2><?php esc_html_e( 'Add capability', 'tn-user-management' ); ?></h2>
@@ -290,7 +320,8 @@ function tn731_umg_render_capabilities_page() {
 		</form>
 
 		<?php foreach ( $groups as $group => $group_rows ) : ?>
-			<?php tn731_umg_render_capability_table( 'Singles' === $group ? 'Single capabilities' : $group . '_*', $group_rows, $manual_capabilities, $show ); ?>
+			<?php $group_details = tn731_umg_get_capability_group_details( $group ); ?>
+			<?php tn731_umg_render_capability_table( $group_details['title'], $group_details['id'], $group_rows, $manual_capabilities, $show ); ?>
 		<?php endforeach; ?>
 	</div>
 	<?php
