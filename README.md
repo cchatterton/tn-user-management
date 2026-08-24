@@ -154,6 +154,8 @@ TN User Management supports native WordPress updates from public GitHub releases
 
 The Plugins screen provides **View details**, **GitHub**, and **Check for updates** links. Update metadata is cached to reduce GitHub API requests.
 
+The **View details** modal renders its Description from this README and its Changelog from the repository's `CHANGELOG.md`. Rendered content is cached for six hours and falls back to local explanatory links if GitHub is temporarily unavailable.
+
 ## Building a release
 
 Run:

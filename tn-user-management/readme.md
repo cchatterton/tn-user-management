@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.13
+- Version: 1.14
 - Status: Production
 
 ## Purpose
@@ -21,6 +21,7 @@ TN User Management provides email-as-username handling, one-time username migrat
 - Supports WordPress multisite and network activation.
 - Preserves the activating user's Administrator access and grants Super Admin plus per-site Administrator access on multisite.
 - Shows assigned user email addresses directly on the Permission Sets list without requiring an admin-columns plugin.
+- Renders the GitHub README and complete repository changelog in the WordPress plugin-details modal.
 
 ## Folder Structure
 

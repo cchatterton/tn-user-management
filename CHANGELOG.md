@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.14 - 2026-08-24
+
+- Updated the plugin-details Description tab to render the repository README.
+- Updated the plugin-details Changelog tab to render the complete repository `CHANGELOG.md`.
+- Added cached, sanitised GitHub document rendering with safe fallbacks when GitHub is unavailable.
+
 ## 1.13 - 2026-08-24
 
 - Added a native Assigned Users column to the Permission Sets list.

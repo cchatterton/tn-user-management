@@ -14,6 +14,7 @@ final class TN731_UMG_GitHub_Updater {
 	private const ASSET_NAME = 'tn-user-management.zip';
 	private const RELEASE_TRANSIENT = 'tn731_umg_github_latest_release';
 	private const ERROR_TRANSIENT = 'tn731_umg_github_latest_release_error';
+	private const DETAILS_TRANSIENT = 'tn731_umg_github_plugin_details';
 
 	public static function init() {
 		add_filter( 'pre_set_site_transient_update_plugins', array( __CLASS__, 'add_update_data' ) );
@@ -87,6 +88,8 @@ final class TN731_UMG_GitHub_Updater {
 			return $result;
 		}
 
+		$sections = self::get_plugin_information_sections();
+
 		return (object) array(
 			'name'           => 'TN User Management',
 			'slug'           => self::SLUG,
@@ -97,11 +100,71 @@ final class TN731_UMG_GitHub_Updater {
 			'download_link'  => $download_url,
 			'requires'       => '6.0',
 			'requires_php'   => '8.1',
-			'sections'       => array(
-				'description' => 'Email-as-username, role normalisation, permission sets, and multisite user governance.',
-				'changelog'   => wp_kses_post( (string) ( $release['body'] ?? '' ) ),
+			'sections'       => $sections,
+		);
+	}
+
+	private static function get_plugin_information_sections() {
+
+		$sections = get_site_transient( self::DETAILS_TRANSIENT );
+
+		if ( is_array( $sections ) && ! empty( $sections['description'] ) && ! empty( $sections['changelog'] ) ) {
+			return $sections;
+		}
+
+		$description = self::get_repository_document_html( 'README.md' );
+		$changelog   = self::get_repository_document_html( 'CHANGELOG.md' );
+
+		$sections = array(
+			'description' => $description ?: '<p>' . esc_html__( 'TN User Management provides a binary access model, permission sets, capability management, email-as-username handling, and multisite user governance for WordPress.', 'tn-user-management' ) . '</p>',
+			'changelog'   => $changelog ?: sprintf(
+				'<p><a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
+				esc_url( self::repository_url() . '/blob/main/CHANGELOG.md' ),
+				esc_html__( 'View the complete changelog on GitHub.', 'tn-user-management' )
 			),
 		);
+
+		if ( ! empty( $description ) && ! empty( $changelog ) ) {
+			set_site_transient( self::DETAILS_TRANSIENT, $sections, 6 * HOUR_IN_SECONDS );
+		}
+
+		return $sections;
+	}
+
+	private static function get_repository_document_html( $path ) {
+
+		if ( ! in_array( $path, array( 'README.md', 'CHANGELOG.md' ), true ) ) {
+			return '';
+		}
+
+		$response = wp_remote_get(
+			'https://api.github.com/repos/' . self::OWNER . '/' . self::REPO . '/contents/' . rawurlencode( $path ) . '?ref=main',
+			array(
+				'timeout' => 10,
+				'headers' => array(
+					'Accept'               => 'application/vnd.github.html+json',
+					'X-GitHub-Api-Version' => '2022-11-28',
+					'User-Agent'           => 'TN-User-Management/' . TN731_UMG_VERSION,
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return '';
+		}
+
+		$html = trim( wp_remote_retrieve_body( $response ) );
+
+		if ( '' === $html ) {
+			return '';
+		}
+
+		$html = preg_replace( '#^<div\s+id="file"[^>]*><article[^>]*>#i', '', $html );
+		$html = preg_replace( '#</article></div>$#i', '', $html );
+		$html = preg_replace( '#<a\b[^>]*class="anchor"[^>]*>.*?</a>#is', '', $html );
+		$html = preg_replace( '#<div\s+class="markdown-heading"[^>]*>\s*<h1\b[^>]*>.*?</h1>\s*</div>#is', '', $html, 1 );
+
+		return wp_kses_post( trim( $html ) );
 	}
 
 	public static function plugin_row_meta( $links, $file ) {
@@ -309,6 +372,7 @@ final class TN731_UMG_GitHub_Updater {
 	private static function clear_release_cache() {
 		delete_site_transient( self::RELEASE_TRANSIENT );
 		delete_site_transient( self::ERROR_TRANSIENT );
+		delete_site_transient( self::DETAILS_TRANSIENT );
 	}
 
 	private static function release_version( $release ) {
