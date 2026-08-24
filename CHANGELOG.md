@@ -2,6 +2,11 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.15 - 2026-08-24
+
+- Removed the manually generated View details row link so only WordPress's native View details link is displayed.
+- Preserved the native plugin-details modal backed by the repository README and changelog.
+
 ## 1.14 - 2026-08-24
 
 - Updated the plugin-details Description tab to render the repository README.

@@ -173,24 +173,6 @@ final class TN731_UMG_GitHub_Updater {
 			return $links;
 		}
 
-		$details_url = add_query_arg(
-			array(
-				'tab'       => 'plugin-information',
-				'plugin'    => self::SLUG,
-				'TB_iframe' => 'true',
-				'width'     => '600',
-				'height'    => '550',
-			),
-			self_admin_url( 'plugin-install.php' )
-		);
-
-		$links[] = sprintf(
-			'<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s">%s</a>',
-			esc_url( $details_url ),
-			esc_attr__( 'View TN User Management details', 'tn-user-management' ),
-			esc_html__( 'View details', 'tn-user-management' )
-		);
-
 		$links[] = sprintf(
 			'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
 			esc_url( self::repository_url() ),
