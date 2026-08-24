@@ -15,6 +15,57 @@ add_action( 'edit_user_profile', 'tn731_umg_show_user_permission_sets_field' );
 add_action( 'personal_options_update', 'tn731_umg_save_user_permission_sets_field' );
 add_action( 'edit_user_profile_update', 'tn731_umg_save_user_permission_sets_field' );
 
+add_filter( 'manage_tn731_permset_posts_columns', 'tn731_umg_add_assigned_users_column' );
+add_action( 'manage_tn731_permset_posts_custom_column', 'tn731_umg_render_assigned_users_column', 10, 2 );
+
+/*
+|--------------------------------------------------------------------------
+| Permission Set List Columns
+|--------------------------------------------------------------------------
+*/
+
+function tn731_umg_add_assigned_users_column( $columns ) {
+
+	$assigned_users_column = array(
+		'tn731_umg_assigned_users' => __( 'Assigned Users', 'tn-user-management' ),
+	);
+
+	if ( ! isset( $columns['date'] ) ) {
+		return array_merge( $columns, $assigned_users_column );
+	}
+
+	$date_column = array(
+		'date' => $columns['date'],
+	);
+
+	unset( $columns['date'] );
+
+	return array_merge( $columns, $assigned_users_column, $date_column );
+}
+
+function tn731_umg_render_assigned_users_column( $column, $permission_set_id ) {
+
+	if ( 'tn731_umg_assigned_users' !== $column ) {
+		return;
+	}
+
+	$users = tn731_umg_get_users_for_permission_set( $permission_set_id );
+
+	if ( empty( $users ) ) {
+		echo '&mdash;';
+		return;
+	}
+
+	$emails = array_map(
+		static function( $user ) {
+			return (string) $user->user_email;
+		},
+		$users
+	);
+
+	echo esc_html( implode( ', ', $emails ) );
+}
+
 /*
 |--------------------------------------------------------------------------
 | Meta Boxes

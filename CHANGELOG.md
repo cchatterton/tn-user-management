@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.13 - 2026-08-24
+
+- Added a native Assigned Users column to the Permission Sets list.
+- Removed the Plugin URI header so WordPress no longer displays the Visit plugin site metadata link.
+- Retained the GitHub, View details, and nonce-protected Check for updates links required by the GitHub update workflow.
+
 ## 1.12 - 2026-08-01
 
 - Enforced Administrator access for the activating user before role processing begins.
