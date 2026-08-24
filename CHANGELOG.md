@@ -2,6 +2,11 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.16 - 2026-08-24
+
+- Restored the View details row link when WordPress does not provide one.
+- Prevented duplicate View details links by detecting an existing native plugin-details link before adding the fallback.
+
 ## 1.15 - 2026-08-24
 
 - Removed the manually generated View details row link so only WordPress's native View details link is displayed.

@@ -173,6 +173,26 @@ final class TN731_UMG_GitHub_Updater {
 			return $links;
 		}
 
+		if ( ! self::has_plugin_details_link( $links ) ) {
+			$details_url = add_query_arg(
+				array(
+					'tab'       => 'plugin-information',
+					'plugin'    => self::SLUG,
+					'TB_iframe' => 'true',
+					'width'     => '600',
+					'height'    => '550',
+				),
+				self_admin_url( 'plugin-install.php' )
+			);
+
+			$links[] = sprintf(
+				'<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s">%s</a>',
+				esc_url( $details_url ),
+				esc_attr__( 'View TN User Management details', 'tn-user-management' ),
+				esc_html__( 'View details', 'tn-user-management' )
+			);
+		}
+
 		$links[] = sprintf(
 			'<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>',
 			esc_url( self::repository_url() ),
@@ -194,6 +214,17 @@ final class TN731_UMG_GitHub_Updater {
 		}
 
 		return $links;
+	}
+
+	private static function has_plugin_details_link( $links ) {
+
+		foreach ( (array) $links as $link ) {
+			if ( false !== strpos( (string) $link, 'open-plugin-details-modal' ) || false !== strpos( (string) $link, 'tab=plugin-information' ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public static function handle_manual_update_check() {
