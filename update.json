@@ -1,4 +1,4 @@
 {
-  "version": "1.17",
-  "body": "Adds User-only capability toggles and confirmed cleanup for obsolete capability groups."
+  "version": "1.18",
+  "body": "Changes User capability toggles to save through AJAX without reloading the page."
 }

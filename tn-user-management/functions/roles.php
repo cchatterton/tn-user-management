@@ -9,6 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 add_action( 'admin_menu', 'tn731_umg_register_capabilities_submenu', 20 );
 add_action( 'admin_init', 'tn731_umg_handle_capability_action' );
+add_action( 'wp_ajax_tn731_umg_toggle_user_capability', 'tn731_umg_ajax_toggle_user_capability' );
 
 function tn731_umg_register_capabilities_submenu() {
 
@@ -73,6 +74,76 @@ function tn731_umg_capability_exists( $capability ) {
 	}
 
 	return false;
+}
+
+function tn731_umg_set_user_role_capability( $capability, $enabled ) {
+
+	$user_role = get_role( 'user' );
+
+	if ( ! $user_role ) {
+		return false;
+	}
+
+	if ( $enabled ) {
+		$user_role->add_cap( $capability, true );
+		tn731_umg_set_user_capability_excluded( $capability, false );
+	} else {
+		$user_role->remove_cap( $capability );
+		tn731_umg_set_user_capability_excluded( $capability, true );
+	}
+
+	return true;
+}
+
+function tn731_umg_ajax_toggle_user_capability() {
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array( 'message' => __( 'You do not have permission to manage capabilities.', 'tn-user-management' ) ),
+			403
+		);
+	}
+
+	check_ajax_referer( 'tn731_umg_toggle_user_capability', 'nonce' );
+
+	$submitted  = isset( $_POST['capability'] ) && is_scalar( $_POST['capability'] )
+		? trim( wp_unslash( $_POST['capability'] ) )
+		: '';
+	$capability = sanitize_key( $submitted );
+	$enabled    = isset( $_POST['enabled'] ) && is_scalar( $_POST['enabled'] )
+		? sanitize_key( wp_unslash( $_POST['enabled'] ) )
+		: '';
+
+	if ( ! $capability || $capability !== $submitted || ! tn731_umg_capability_exists( $capability ) || ! in_array( $enabled, array( 'yes', 'no' ), true ) ) {
+		wp_send_json_error(
+			array( 'message' => __( 'The capability request was invalid.', 'tn-user-management' ) ),
+			400
+		);
+	}
+
+	$is_enabled = 'yes' === $enabled;
+
+	if ( ! tn731_umg_set_user_role_capability( $capability, $is_enabled ) ) {
+		wp_send_json_error(
+			array( 'message' => __( 'The User role is not available.', 'tn-user-management' ) ),
+			409
+		);
+	}
+
+	$user_role = get_role( 'user' );
+
+	wp_send_json_success(
+		array(
+			'enabled'    => $is_enabled,
+			'label'      => $is_enabled ? __( 'Yes', 'tn-user-management' ) : __( 'No', 'tn-user-management' ),
+			'ariaLabel'  => sprintf(
+				$is_enabled ? __( 'Remove %s from User', 'tn-user-management' ) : __( 'Add %s to User', 'tn-user-management' ),
+				$capability
+			),
+			'userCount'  => $user_role ? count( array_filter( (array) $user_role->capabilities ) ) : 0,
+			'message'    => __( 'User capability updated.', 'tn-user-management' ),
+		)
+	);
 }
 
 function tn731_umg_handle_capability_action() {
@@ -141,16 +212,8 @@ function tn731_umg_handle_capability_action() {
 
 		if ( $user_role ) {
 			$has_capability = ! empty( $user_role->capabilities[ $capability ] );
-
-			if ( $has_capability ) {
-				$user_role->remove_cap( $capability );
-				tn731_umg_set_user_capability_excluded( $capability, true );
-				$notice = 'user_removed';
-			} else {
-				$user_role->add_cap( $capability, true );
-				tn731_umg_set_user_capability_excluded( $capability, false );
-				$notice = 'user_added';
-			}
+			tn731_umg_set_user_role_capability( $capability, ! $has_capability );
+			$notice = $has_capability ? 'user_removed' : 'user_added';
 		}
 	} elseif ( 'remove_group' === $action ) {
 		$group_value = isset( $_POST['capability_group'] ) && is_scalar( $_POST['capability_group'] )
@@ -278,7 +341,6 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 			<col class="tn731-umg-role-col">
 			<col class="tn731-umg-role-col">
 			<col class="tn731-umg-role-col">
-			<col class="tn731-umg-role-col">
 			<col class="tn731-umg-action-col">
 		</colgroup>
 		<thead>
@@ -287,13 +349,12 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 				<th><?php esc_html_e( 'Administrator', 'tn-user-management' ); ?></th>
 				<th><?php esc_html_e( 'User', 'tn-user-management' ); ?></th>
 				<th><?php esc_html_e( 'Subscriber', 'tn-user-management' ); ?></th>
-				<th><?php esc_html_e( 'Integration', 'tn-user-management' ); ?></th>
 				<th class="tn731-umg-action-column"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'tn-user-management' ); ?></span></th>
 			</tr>
 		</thead>
 		<tbody>
 		<?php if ( empty( $rows ) ) : ?>
-			<tr><td colspan="6"><?php esc_html_e( 'No capabilities in this group.', 'tn-user-management' ); ?></td></tr>
+			<tr><td colspan="5"><?php esc_html_e( 'No capabilities in this group.', 'tn-user-management' ); ?></td></tr>
 		<?php else : ?>
 			<?php foreach ( $rows as $row ) : ?>
 				<tr class="<?php echo $row['diff'] ? 'tn731-umg-diff-row' : ''; ?>">
@@ -306,8 +367,8 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 								<input type="hidden" name="tn731_umg_capability_action" value="toggle_user">
 								<input type="hidden" name="capability" value="<?php echo esc_attr( $row['cap'] ); ?>">
 								<input type="hidden" name="show" value="<?php echo esc_attr( $show ); ?>">
-								<button type="submit" class="button-link tn731-umg-capability-toggle" aria-label="<?php echo esc_attr( sprintf( $row['user'] ? __( 'Remove %s from User', 'tn-user-management' ) : __( 'Add %s to User', 'tn-user-management' ), $row['cap'] ) ); ?>">
-									<?php echo $row['user'] ? esc_html__( 'Yes', 'tn-user-management' ) : esc_html__( 'No', 'tn-user-management' ); ?>
+								<button type="submit" class="button-link tn731-umg-capability-toggle" role="switch" aria-checked="<?php echo $row['user'] ? 'true' : 'false'; ?>" data-capability="<?php echo esc_attr( $row['cap'] ); ?>" data-enabled="<?php echo $row['user'] ? 'yes' : 'no'; ?>" aria-label="<?php echo esc_attr( sprintf( $row['user'] ? __( 'Remove %s from User', 'tn-user-management' ) : __( 'Add %s to User', 'tn-user-management' ), $row['cap'] ) ); ?>">
+									<span class="tn731-umg-capability-toggle-label" aria-hidden="true"><?php echo $row['user'] ? esc_html__( 'Yes', 'tn-user-management' ) : esc_html__( 'No', 'tn-user-management' ); ?></span>
 								</button>
 							</form>
 						<?php else : ?>
@@ -315,7 +376,6 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 						<?php endif; ?>
 					</td>
 					<td><?php echo $row['sub'] ? esc_html__( 'Yes', 'tn-user-management' ) : '&mdash;'; ?></td>
-					<td>&mdash;</td>
 					<td class="tn731-umg-action-column">
 					<?php if ( in_array( $row['cap'], $manual_capabilities, true ) ) : ?>
 						<form method="post" class="tn731-umg-inline-form">
@@ -344,15 +404,12 @@ function tn731_umg_render_capabilities_page() {
 		wp_die( esc_html__( 'You do not have permission to view capabilities.', 'tn-user-management' ) );
 	}
 
-	$show_value = isset( $_GET['show'] ) && is_scalar( $_GET['show'] ) ? $_GET['show'] : 'diff';
-	$show       = sanitize_key( wp_unslash( $show_value ) );
-	$show       = in_array( $show, array( 'diff', 'all' ), true ) ? $show : 'diff';
+	$show = 'all';
 
 	$roles = array(
-		'admin'       => get_role( 'administrator' ),
-		'user'        => get_role( 'user' ),
-		'sub'         => get_role( 'subscriber' ),
-		'integration' => get_role( 'integration' ),
+		'admin' => get_role( 'administrator' ),
+		'user'  => get_role( 'user' ),
+		'sub'   => get_role( 'subscriber' ),
 	);
 
 	$capabilities = array();
@@ -364,8 +421,7 @@ function tn731_umg_render_capabilities_page() {
 		array_merge(
 			array_keys( $capabilities['admin'] ),
 			array_keys( $capabilities['user'] ),
-			array_keys( $capabilities['sub'] ),
-			array_keys( $capabilities['integration'] )
+			array_keys( $capabilities['sub'] )
 		)
 	);
 	natcasesort( $all_capabilities );
@@ -378,25 +434,19 @@ function tn731_umg_render_capabilities_page() {
 			'user'  => ! empty( $capabilities['user'][ $capability ] ),
 			'sub'   => ! empty( $capabilities['sub'][ $capability ] ),
 		);
-		$row['diff'] = ( $row['admin'] !== $row['user'] )
-			|| ( $row['admin'] !== $row['sub'] )
-			|| $row['admin']
-			|| $row['user']
-			|| $row['sub'];
+		$row['diff'] = $row['admin'] !== $row['user'];
 
-		if ( 'all' === $show || $row['diff'] ) {
-			$rows[] = $row;
-		}
+		$rows[] = $row;
 	}
 
 	$manual_capabilities = tn731_umg_get_manual_capabilities();
 	$groups              = tn731_umg_get_capability_groups( $rows, $manual_capabilities );
-	$base_url            = tn731_umg_get_capabilities_page_url();
 	$notice_value        = isset( $_GET['capability_notice'] ) && is_scalar( $_GET['capability_notice'] ) ? $_GET['capability_notice'] : '';
 	$notice              = sanitize_key( wp_unslash( $notice_value ) );
 	?>
 	<div class="wrap tn731-umg-capabilities-wrap">
 		<h1><?php esc_html_e( 'Capabilities', 'tn-user-management' ); ?></h1>
+		<div id="tn731-umg-capability-status" class="tn731-umg-capability-status" role="status" aria-live="polite"></div>
 
 		<?php if ( 'added' === $notice ) : ?>
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Capability added to Administrator and User.', 'tn-user-management' ); ?></p></div>
@@ -414,16 +464,10 @@ function tn731_umg_render_capabilities_page() {
 			<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Capability could not be changed. Use a unique lowercase name containing only letters, numbers, and underscores.', 'tn-user-management' ); ?></p></div>
 		<?php endif; ?>
 
-		<p class="tn731-umg-button-row">
-			<a href="<?php echo esc_url( add_query_arg( 'show', 'diff', $base_url ) ); ?>" class="<?php echo 'diff' === $show ? 'button button-primary' : 'button'; ?>"><?php esc_html_e( 'Differences', 'tn-user-management' ); ?></a>
-			<a href="<?php echo esc_url( add_query_arg( 'show', 'all', $base_url ) ); ?>" class="<?php echo 'all' === $show ? 'button button-primary' : 'button'; ?>"><?php esc_html_e( 'All', 'tn-user-management' ); ?></a>
-		</p>
-
 		<p>
 			<strong><?php esc_html_e( 'Administrator:', 'tn-user-management' ); ?></strong> <?php echo $roles['admin'] ? esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['admin'] ) ) ) ) : esc_html__( 'Missing', 'tn-user-management' ); ?>
-			&nbsp;|&nbsp; <strong><?php esc_html_e( 'User:', 'tn-user-management' ); ?></strong> <?php echo $roles['user'] ? esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['user'] ) ) ) ) : esc_html__( 'Missing', 'tn-user-management' ); ?>
+			&nbsp;|&nbsp; <strong><?php esc_html_e( 'User:', 'tn-user-management' ); ?></strong> <?php if ( $roles['user'] ) : ?><span id="tn731-umg-user-capability-count"><?php echo esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['user'] ) ) ) ); ?></span><?php else : ?><?php esc_html_e( 'Missing', 'tn-user-management' ); ?><?php endif; ?>
 			&nbsp;|&nbsp; <strong><?php esc_html_e( 'Subscriber:', 'tn-user-management' ); ?></strong> <?php echo $roles['sub'] ? esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['sub'] ) ) ) ) : esc_html__( 'Missing', 'tn-user-management' ); ?>
-			&nbsp;|&nbsp; <strong><?php esc_html_e( 'Integration:', 'tn-user-management' ); ?></strong> <?php echo $roles['integration'] ? esc_html__( 'Registered (0)', 'tn-user-management' ) : esc_html__( 'Missing', 'tn-user-management' ); ?>
 		</p>
 		<nav class="tn731-umg-section-links" aria-label="<?php esc_attr_e( 'Capability sections', 'tn-user-management' ); ?>">
 			<strong><?php esc_html_e( 'Sections:', 'tn-user-management' ); ?></strong>
@@ -435,9 +479,6 @@ function tn731_umg_render_capabilities_page() {
 				<?php $section_number++; ?>
 			<?php endforeach; ?>
 		</nav>
-
-		<p><em><?php esc_html_e( 'Integration is a database-only role. It has no capabilities and accounts assigned to it cannot log in.', 'tn-user-management' ); ?></em></p>
-		<p><em><?php esc_html_e( 'WordPress does not identify which capabilities still belong to active code. Remove a prefix group only after confirming that its plugin or theme is no longer used.', 'tn-user-management' ); ?></em></p>
 
 		<h2><?php esc_html_e( 'Add capability', 'tn-user-management' ); ?></h2>
 		<form method="post" class="tn731-umg-add-capability-form">

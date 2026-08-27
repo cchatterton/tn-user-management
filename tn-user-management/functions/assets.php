@@ -32,4 +32,17 @@ function tn731_umg_enqueue_admin_assets( $hook_suffix ) {
 		TN731_UMG_VERSION,
 		true
 	);
+
+	if ( $screen && 'tn731_permset_page_tn731-umg-roles' === $screen->id ) {
+		wp_localize_script(
+			'tn731-umg-admin',
+			'TN731UMGCapabilities',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'tn731_umg_toggle_user_capability' ),
+				'success' => __( 'User capability updated.', 'tn-user-management' ),
+				'error'   => __( 'The capability could not be updated. Please try again.', 'tn-user-management' ),
+			)
+		);
+	}
 }

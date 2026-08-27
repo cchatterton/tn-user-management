@@ -49,7 +49,7 @@ The plugin creates and maintains a `user` role whose capabilities match the curr
 - The role is synchronised during activation and when **Sync Admin Rights** is selected on the Plugins screen.
 - Administrator capabilities are also granted to User accounts at runtime, except for capabilities explicitly disabled for User. This keeps the two roles aligned when another plugin adds a capability after the last stored-role sync.
 - Capabilities added from the plugin's **Capabilities** screen are added to both roles.
-- Clicking **Yes** or **No** in the User column disables or enables that capability for the User role only. Explicit exclusions survive activation and **Sync Admin Rights**.
+- Clicking **Yes** or **No** in the User column updates that capability for the User role only without reloading the page. Explicit exclusions survive activation and **Sync Admin Rights**.
 - Administrator accounts are not affected by Permission Set menu filtering.
 
 ### Permission Sets
@@ -79,7 +79,7 @@ The ownership rule applies to public post types and is an explicit capability re
 
 ### Capability management
 
-The **Permission Sets → Capabilities** screen compares the capabilities held by Administrator, User, Subscriber, and Integration.
+The **Permission Sets → Capabilities** screen compares the capabilities held by Administrator, User, and Subscriber. Integration remains a locked database-only role and is omitted from this management view.
 
 - Capabilities are grouped by the text before the first underscore.
 - Capabilities created through this screen appear in a dedicated **Custom** group.

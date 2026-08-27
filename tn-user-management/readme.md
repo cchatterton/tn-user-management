@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.17
+- Version: 1.18
 - Status: Production
 
 ## Purpose
@@ -14,7 +14,7 @@ TN User Management provides email-as-username handling, one-time username migrat
 - Provides permission sets that control the admin menus visible to User accounts.
 - Adds a database-only Integration role with no capabilities and no login access.
 - Adds and removes explicitly managed capabilities for Administrator and User.
-- Lets administrators toggle individual capabilities on or off for the User role.
+- Lets administrators toggle individual capabilities on or off for the User role without reloading the page.
 - Removes obsolete prefix-based capability groups from every stored role on the current site after confirmation.
 - Groups manually added capabilities into a dedicated Custom section.
 - Groups capability comparisons by the text before the first underscore.

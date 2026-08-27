@@ -2,6 +2,15 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.18 - 2026-08-27
+
+- Changed User capability Yes/No controls to save through WordPress AJAX without reloading the Capabilities page.
+- Added per-control loading states, inline success and error feedback, and live User capability count updates.
+- Styled the controls as accessible Yes/No slide switches with a clear enabled state and keyboard focus treatment.
+- Removed the Differences/All filter so the complete capability list is always visible.
+- Removed the Integration comparison column and explanatory commentary from the Capabilities screen.
+- Retained the nonce-protected form submission as a no-JavaScript fallback.
+
 ## 1.17 - 2026-08-27
 
 - Made Yes and No values in the User capability column clickable so administrators can remove or restore a capability for User only.
