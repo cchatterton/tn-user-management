@@ -39,8 +39,10 @@ function tn731_umg_enqueue_admin_assets( $hook_suffix ) {
 			'TN731UMGCapabilities',
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'tn731_umg_toggle_user_capability' ),
-				'error'   => __( 'The capability could not be updated. Please try again.', 'tn-user-management' ),
+				'nonce'         => wp_create_nonce( 'tn731_umg_manage_capability_ajax' ),
+				'error'         => __( 'The capability could not be updated. Please try again.', 'tn-user-management' ),
+				'deleteConfirm' => __( 'Remove %s from every stored role on this site? This cannot be undone automatically.', 'tn-user-management' ),
+				'emptyGroup'    => __( 'No capabilities in this group.', 'tn-user-management' ),
 			)
 		);
 	}

@@ -10,6 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 add_action( 'admin_menu', 'tn731_umg_register_capabilities_submenu', 20 );
 add_action( 'admin_init', 'tn731_umg_handle_capability_action' );
 add_action( 'wp_ajax_tn731_umg_toggle_user_capability', 'tn731_umg_ajax_toggle_user_capability' );
+add_action( 'wp_ajax_tn731_umg_delete_capability', 'tn731_umg_ajax_delete_capability' );
 
 function tn731_umg_register_capabilities_submenu() {
 
@@ -95,6 +96,40 @@ function tn731_umg_set_user_role_capability( $capability, $enabled ) {
 	return true;
 }
 
+function tn731_umg_remove_capability_from_all_roles( $capability ) {
+
+	if ( ! tn731_umg_capability_exists( $capability ) ) {
+		return false;
+	}
+
+	foreach ( array_keys( (array) wp_roles()->roles ) as $role_slug ) {
+		$role = get_role( $role_slug );
+
+		if ( $role ) {
+			$role->remove_cap( $capability );
+		}
+	}
+
+	$manual_capabilities   = array_values( array_diff( tn731_umg_get_manual_capabilities(), array( $capability ) ) );
+	$excluded_capabilities = array_values( array_diff( tn731_umg_get_user_excluded_capabilities(), array( $capability ) ) );
+	update_option( 'tn731_umg_manual_capabilities', $manual_capabilities, false );
+	update_option( 'tn731_umg_user_excluded_capabilities', $excluded_capabilities, false );
+
+	return true;
+}
+
+function tn731_umg_get_managed_role_capability_counts() {
+
+	$counts = array();
+
+	foreach ( array( 'administrator', 'user', 'subscriber' ) as $role_slug ) {
+		$role = get_role( $role_slug );
+		$counts[ $role_slug ] = $role ? count( array_filter( (array) $role->capabilities ) ) : 0;
+	}
+
+	return $counts;
+}
+
 function tn731_umg_ajax_toggle_user_capability() {
 
 	if ( ! current_user_can( 'manage_options' ) ) {
@@ -104,7 +139,7 @@ function tn731_umg_ajax_toggle_user_capability() {
 		);
 	}
 
-	check_ajax_referer( 'tn731_umg_toggle_user_capability', 'nonce' );
+	check_ajax_referer( 'tn731_umg_manage_capability_ajax', 'nonce' );
 
 	$submitted  = isset( $_POST['capability'] ) && is_scalar( $_POST['capability'] )
 		? trim( wp_unslash( $_POST['capability'] ) )
@@ -141,6 +176,36 @@ function tn731_umg_ajax_toggle_user_capability() {
 				$capability
 			),
 			'userCount'  => $user_role ? count( array_filter( (array) $user_role->capabilities ) ) : 0,
+		)
+	);
+}
+
+function tn731_umg_ajax_delete_capability() {
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error(
+			array( 'message' => __( 'You do not have permission to manage capabilities.', 'tn-user-management' ) ),
+			403
+		);
+	}
+
+	check_ajax_referer( 'tn731_umg_manage_capability_ajax', 'nonce' );
+
+	$submitted  = isset( $_POST['capability'] ) && is_scalar( $_POST['capability'] )
+		? trim( wp_unslash( $_POST['capability'] ) )
+		: '';
+	$capability = sanitize_key( $submitted );
+
+	if ( ! $capability || $capability !== $submitted || ! tn731_umg_remove_capability_from_all_roles( $capability ) ) {
+		wp_send_json_error(
+			array( 'message' => __( 'The capability could not be removed.', 'tn-user-management' ) ),
+			400
+		);
+	}
+
+	wp_send_json_success(
+		array(
+			'counts' => tn731_umg_get_managed_role_capability_counts(),
 		)
 	);
 }
@@ -186,24 +251,10 @@ function tn731_umg_handle_capability_action() {
 				$notice = 'added';
 			}
 		}
-	} elseif ( 'remove' === $action ) {
+	} elseif ( 'remove' === $action || 'remove_any' === $action ) {
 		$manual_capabilities = tn731_umg_get_manual_capabilities();
 
-		if ( in_array( $capability, $manual_capabilities, true ) ) {
-			$admin_role = get_role( 'administrator' );
-			$user_role  = get_role( 'user' );
-
-			if ( $admin_role ) {
-				$admin_role->remove_cap( $capability );
-			}
-
-			if ( $user_role ) {
-				$user_role->remove_cap( $capability );
-			}
-
-			$manual_capabilities = array_values( array_diff( $manual_capabilities, array( $capability ) ) );
-			update_option( 'tn731_umg_manual_capabilities', $manual_capabilities, false );
-			tn731_umg_set_user_capability_excluded( $capability, false );
+		if ( ( 'remove_any' === $action || in_array( $capability, $manual_capabilities, true ) ) && tn731_umg_remove_capability_from_all_roles( $capability ) ) {
 			$notice = 'removed';
 		}
 	} elseif ( 'toggle_user' === $action && tn731_umg_capability_exists( $capability ) ) {
@@ -220,12 +271,12 @@ function tn731_umg_handle_capability_action() {
 			: '';
 		$group       = sanitize_key( $group_value );
 
-		if ( $group && $group === $group_value && preg_match( '/^[a-z][a-z0-9]*$/', $group ) ) {
+		if ( $group && $group === $group_value && preg_match( '/^[a-z][a-z0-9-]*$/', $group ) ) {
 			$removed_capabilities = array();
 
 			foreach ( (array) wp_roles()->roles as $role_data ) {
 				foreach ( array_keys( (array) $role_data['capabilities'] ) as $role_capability ) {
-					if ( 0 === strpos( $role_capability, $group . '_' ) ) {
+					if ( $group === $role_capability || 0 === strpos( $role_capability, $group . '_' ) ) {
 						$removed_capabilities[] = $role_capability;
 					}
 				}
@@ -269,8 +320,9 @@ function tn731_umg_handle_capability_action() {
 
 function tn731_umg_get_capability_groups( $rows, $manual_capabilities = array() ) {
 
-	$rows_by_prefix = array();
-	$groups         = array(
+	$prefix_groups = array();
+	$single_rows   = array();
+	$groups        = array(
 		'Singles' => array(),
 		'Custom'  => array(),
 	);
@@ -281,18 +333,21 @@ function tn731_umg_get_capability_groups( $rows, $manual_capabilities = array() 
 			continue;
 		}
 
+		if ( false === strpos( $row['cap'], '_' ) ) {
+			$single_rows[ $row['cap'] ] = $row;
+			continue;
+		}
+
 		$parts  = explode( '_', $row['cap'], 2 );
 		$prefix = $parts[0];
-		$rows_by_prefix[ $prefix ][] = $row;
+		$prefix_groups[ $prefix ][] = $row;
 	}
 
-	$prefix_groups = array();
-
-	foreach ( $rows_by_prefix as $prefix => $prefix_rows ) {
-		if ( count( $prefix_rows ) >= 2 ) {
-			$prefix_groups[ $prefix ] = $prefix_rows;
+	foreach ( $single_rows as $capability => $row ) {
+		if ( isset( $prefix_groups[ $capability ] ) ) {
+			array_unshift( $prefix_groups[ $capability ], $row );
 		} else {
-			$groups['Singles'][] = $prefix_rows[0];
+			$groups['Singles'][] = $row;
 		}
 	}
 
@@ -307,7 +362,7 @@ function tn731_umg_get_capability_group_details( $group ) {
 	} elseif ( 'Custom' === $group ) {
 		$title = 'Custom capabilities';
 	} else {
-		$title = $group . '_*';
+		$title = $group;
 	}
 
 	$id    = 'tn731-umg-capability-group-' . sanitize_html_class( strtolower( $group ) );
@@ -318,7 +373,7 @@ function tn731_umg_get_capability_group_details( $group ) {
 	);
 }
 
-function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, $manual_capabilities, $show ) {
+function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, $show ) {
 	?>
 	<div class="tn731-umg-capability-heading-row">
 		<h2 id="<?php echo esc_attr( $section_id ); ?>" class="tn731-umg-capability-heading"><?php echo esc_html( $title ); ?></h2>
@@ -328,8 +383,9 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 				<input type="hidden" name="tn731_umg_capability_action" value="remove_group">
 				<input type="hidden" name="capability_group" value="<?php echo esc_attr( $group ); ?>">
 				<input type="hidden" name="show" value="<?php echo esc_attr( $show ); ?>">
-				<button type="submit" class="button button-secondary tn731-umg-confirm-remove-capability-group" data-capability-group="<?php echo esc_attr( $title ); ?>">
-					<?php echo esc_html( sprintf( __( 'Remove %s from all roles', 'tn-user-management' ), $title ) ); ?>
+				<button type="submit" class="button-link-delete tn731-umg-remove-capability tn731-umg-confirm-remove-capability-group" data-capability-group="<?php echo esc_attr( $title ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Remove all %s capabilities from every role', 'tn-user-management' ), $title ) ); ?>" title="<?php echo esc_attr( sprintf( __( 'Remove all %s capabilities', 'tn-user-management' ), $title ) ); ?>">
+					<span class="dashicons dashicons-trash" aria-hidden="true"></span>
+					<span class="screen-reader-text"><?php esc_html_e( 'Remove capability group', 'tn-user-management' ); ?></span>
 				</button>
 			</form>
 		<?php endif; ?>
@@ -377,18 +433,16 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 					</td>
 					<td><?php echo $row['sub'] ? esc_html__( 'Yes', 'tn-user-management' ) : '&mdash;'; ?></td>
 					<td class="tn731-umg-action-column">
-					<?php if ( in_array( $row['cap'], $manual_capabilities, true ) ) : ?>
 						<form method="post" class="tn731-umg-inline-form">
 							<?php wp_nonce_field( 'tn731_umg_manage_capability' ); ?>
-							<input type="hidden" name="tn731_umg_capability_action" value="remove">
+							<input type="hidden" name="tn731_umg_capability_action" value="remove_any">
 							<input type="hidden" name="capability" value="<?php echo esc_attr( $row['cap'] ); ?>">
 							<input type="hidden" name="show" value="<?php echo esc_attr( $show ); ?>">
-							<button type="submit" class="button-link-delete tn731-umg-remove-capability tn731-umg-confirm-remove-capability" aria-label="<?php echo esc_attr( sprintf( __( 'Remove capability %s', 'tn-user-management' ), $row['cap'] ) ); ?>" title="<?php esc_attr_e( 'Remove capability', 'tn-user-management' ); ?>">
+							<button type="submit" class="button-link-delete tn731-umg-remove-capability tn731-umg-delete-capability" data-capability="<?php echo esc_attr( $row['cap'] ); ?>" aria-label="<?php echo esc_attr( sprintf( __( 'Remove capability %s from every role', 'tn-user-management' ), $row['cap'] ) ); ?>" title="<?php esc_attr_e( 'Remove capability from every role', 'tn-user-management' ); ?>">
 								<span class="dashicons dashicons-trash" aria-hidden="true"></span>
 								<span class="screen-reader-text"><?php esc_html_e( 'Remove', 'tn-user-management' ); ?></span>
 							</button>
 						</form>
-					<?php endif; ?>
 					</td>
 				</tr>
 			<?php endforeach; ?>
@@ -448,22 +502,14 @@ function tn731_umg_render_capabilities_page() {
 		<h1><?php esc_html_e( 'Capabilities', 'tn-user-management' ); ?></h1>
 		<div id="tn731-umg-capability-status" class="tn731-umg-capability-status" role="status" aria-live="polite" hidden></div>
 
-		<?php if ( 'added' === $notice ) : ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Capability added to Administrator and User.', 'tn-user-management' ); ?></p></div>
-		<?php elseif ( 'removed' === $notice ) : ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Manually added capability removed.', 'tn-user-management' ); ?></p></div>
-		<?php elseif ( 'group_removed' === $notice ) : ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Capability group removed from all roles on this site.', 'tn-user-management' ); ?></p></div>
-		<?php elseif ( 'group_empty' === $notice ) : ?>
-			<div class="notice notice-info is-dismissible"><p><?php esc_html_e( 'No stored capabilities were found in that group.', 'tn-user-management' ); ?></p></div>
-		<?php elseif ( 'invalid' === $notice ) : ?>
+		<?php if ( 'invalid' === $notice ) : ?>
 			<div class="notice notice-error is-dismissible"><p><?php esc_html_e( 'Capability could not be changed. Use a unique lowercase name containing only letters, numbers, and underscores.', 'tn-user-management' ); ?></p></div>
 		<?php endif; ?>
 
 		<p>
-			<strong><?php esc_html_e( 'Administrator:', 'tn-user-management' ); ?></strong> <?php echo $roles['admin'] ? esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['admin'] ) ) ) ) : esc_html__( 'Missing', 'tn-user-management' ); ?>
+			<strong><?php esc_html_e( 'Administrator:', 'tn-user-management' ); ?></strong> <?php if ( $roles['admin'] ) : ?><span id="tn731-umg-administrator-capability-count"><?php echo esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['admin'] ) ) ) ); ?></span><?php else : ?><?php esc_html_e( 'Missing', 'tn-user-management' ); ?><?php endif; ?>
 			&nbsp;|&nbsp; <strong><?php esc_html_e( 'User:', 'tn-user-management' ); ?></strong> <?php if ( $roles['user'] ) : ?><span id="tn731-umg-user-capability-count"><?php echo esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['user'] ) ) ) ); ?></span><?php else : ?><?php esc_html_e( 'Missing', 'tn-user-management' ); ?><?php endif; ?>
-			&nbsp;|&nbsp; <strong><?php esc_html_e( 'Subscriber:', 'tn-user-management' ); ?></strong> <?php echo $roles['sub'] ? esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['sub'] ) ) ) ) : esc_html__( 'Missing', 'tn-user-management' ); ?>
+			&nbsp;|&nbsp; <strong><?php esc_html_e( 'Subscriber:', 'tn-user-management' ); ?></strong> <?php if ( $roles['sub'] ) : ?><span id="tn731-umg-subscriber-capability-count"><?php echo esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['sub'] ) ) ) ); ?></span><?php else : ?><?php esc_html_e( 'Missing', 'tn-user-management' ); ?><?php endif; ?>
 		</p>
 		<nav class="tn731-umg-section-links" aria-label="<?php esc_attr_e( 'Capability sections', 'tn-user-management' ); ?>">
 			<strong><?php esc_html_e( 'Sections:', 'tn-user-management' ); ?></strong>
@@ -488,7 +534,7 @@ function tn731_umg_render_capabilities_page() {
 
 		<?php foreach ( $groups as $group => $group_rows ) : ?>
 			<?php $group_details = tn731_umg_get_capability_group_details( $group ); ?>
-			<?php tn731_umg_render_capability_table( $group, $group_details['title'], $group_details['id'], $group_rows, $manual_capabilities, $show ); ?>
+			<?php tn731_umg_render_capability_table( $group, $group_details['title'], $group_details['id'], $group_rows, $show ); ?>
 		<?php endforeach; ?>
 	</div>
 	<?php

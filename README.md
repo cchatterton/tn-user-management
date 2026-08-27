@@ -81,11 +81,11 @@ The ownership rule applies to public post types and is an explicit capability re
 
 The **Permission Sets → Capabilities** screen compares the capabilities held by Administrator, User, and Subscriber. Integration remains a locked database-only role and is omitted from this management view.
 
-- Capabilities are grouped by the text before the first underscore.
+- An underscore identifies a grouped capability, and the text before the first underscore becomes its group name. An exact capability matching that name joins the same group.
 - Capabilities created through this screen appear in a dedicated **Custom** group.
 - A new capability is added to both Administrator and User.
-- Capabilities created and tracked by this plugin can be removed individually from both Administrator and User.
-- Prefix-based groups, such as `smartslider_*`, can be removed from every stored role on the current site after confirmation. WordPress does not provide a reliable registry of active capabilities, so the plugin does not guess which groups are obsolete.
+- Every capability has an AJAX trash action that removes it from all stored roles on the current site, including unprefixed capabilities listed under Singles.
+- Prefix-based groups, such as `smartslider`, have a trash action beside the group heading that removes both the exact `smartslider` capability and every `smartslider_*` capability from all stored roles after confirmation. WordPress does not provide a reliable registry of active capabilities, so the plugin does not guess which groups are obsolete.
 - The Integration role always has no effective capabilities.
 
 ### Email as username

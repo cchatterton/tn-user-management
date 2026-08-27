@@ -2,12 +2,20 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.20 - 2026-08-27
+
+- Added an AJAX trash action to every capability row so individual capabilities, including unprefixed Singles, can be removed from every stored role without reloading the page.
+- Replaced group-level text removal buttons with compact, right-aligned trash icons and explicit accessible labels.
+- Kept destructive confirmations, nonce validation, permission checks, role counts, and capability tracking in sync after removal.
+- Normalised group headings to the prefix without `_*` and made group removal include both the exact prefix capability and all underscore-prefixed members.
+- Applied the same clean prefix names to the Sections navigation and retained one-capability underscore groups instead of moving them into Singles.
+
 ## 1.19 - 2026-08-27
 
 - Replaced the heavy filled capability buttons with compact rounded switch tracks and understated Yes/No labels using the native WordPress admin-theme colour.
 - Removed the conflicting WordPress button-link styling that caused the disabled switch to render incorrectly.
 - Added reduced-motion support while retaining keyboard focus and screen-reader switch semantics.
-- Removed successful-toggle notices because the updated switch state already provides confirmation; failures still show an inline error.
+- Removed successful capability-action notices because the updated screen state already provides confirmation; failures still show an inline error.
 
 ## 1.18 - 2026-08-27
 

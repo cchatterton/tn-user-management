@@ -1,4 +1,4 @@
 {
-  "version": "1.19",
-  "body": "Refines User capability controls into compact, accessible slide switches."
+  "version": "1.20",
+  "body": "Adds AJAX removal for individual capabilities and compact group-level trash controls."
 }

@@ -261,6 +261,11 @@
 	color: #8a2424;
 }
 
+.tn731-umg-remove-capability.is-loading {
+	cursor: progress;
+	opacity: 0.45;
+}
+
 .tn731-umg-remove-capability .dashicons {
 	font-size: 18px;
 	line-height: 1;
@@ -272,8 +277,4 @@
 		flex-direction: column;
 	}
 
-	.tn731-umg-capability-heading-row {
-		align-items: flex-start;
-		flex-direction: column;
-	}
 }

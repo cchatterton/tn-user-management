@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.19
+- Version: 1.20
 - Status: Production
 
 ## Purpose
@@ -16,8 +16,9 @@ TN User Management provides email-as-username handling, one-time username migrat
 - Adds and removes explicitly managed capabilities for Administrator and User.
 - Lets administrators toggle individual capabilities on or off for the User role without reloading the page.
 - Removes obsolete prefix-based capability groups from every stored role on the current site after confirmation.
+- Removes any individual capability from every stored role through an AJAX trash action.
 - Groups manually added capabilities into a dedicated Custom section.
-- Groups capability comparisons by the text before the first underscore.
+- Uses underscores to identify grouped capabilities and names each group from the text before the first underscore.
 - Supports per-user All content or Own content only editing rules across public post types.
 - Supports native WordPress updates from public GitHub releases.
 - Supports WordPress multisite and network activation.
@@ -40,7 +41,7 @@ tn-user-management/
 
 - Requires WordPress 6.0 or newer and PHP 8.1 or newer.
 - Integration accounts are intentionally blocked from authentication and have all effective capabilities denied.
-- Capabilities created on the Capabilities page are tracked in the `tn731_umg_manual_capabilities` option so they can be removed individually from Administrator and User.
+- Capabilities created on the Capabilities page are tracked in the `tn731_umg_manual_capabilities` option and are cleaned from that tracking when removed.
 - Capabilities intentionally removed from User are stored in `tn731_umg_user_excluded_capabilities` so activation, runtime inheritance, and manual synchronisation preserve the exclusion.
 - Per-user content access is stored in `tn731_umg_content_access`; missing or invalid values default to unrestricted All content access.
 - Username migration runs once in each activation request, and its activation result notice is consumed after one display.

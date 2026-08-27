@@ -15,16 +15,29 @@
 			return;
 		}
 
-		if (target.classList.contains('tn731-umg-confirm-remove-capability')) {
-			if (!window.confirm('Remove this capability from Administrator and User?')) {
+		var deleteCapability = target.closest('.tn731-umg-delete-capability');
+		if (deleteCapability) {
+			var capability = deleteCapability.getAttribute('data-capability');
+			var confirmation = window.TN731UMGCapabilities
+				? window.TN731UMGCapabilities.deleteConfirm.replace('%s', capability)
+				: 'Remove ' + capability + ' from every stored role on this site? This cannot be undone automatically.';
+
+			if (!window.confirm(confirmation)) {
 				event.preventDefault();
+				return;
+			}
+
+			if (window.TN731UMGCapabilities) {
+				event.preventDefault();
+				deleteSingleCapability(deleteCapability);
 			}
 
 			return;
 		}
 
-		if (target.classList.contains('tn731-umg-confirm-remove-capability-group')) {
-			var capabilityGroup = target.getAttribute('data-capability-group') || 'this capability group';
+		var deleteCapabilityGroup = target.closest('.tn731-umg-confirm-remove-capability-group');
+		if (deleteCapabilityGroup) {
+			var capabilityGroup = deleteCapabilityGroup.getAttribute('data-capability-group') || 'this capability group';
 
 			if (!window.confirm('Remove ' + capabilityGroup + ' from every stored role on this site? This cannot be undone automatically.')) {
 				event.preventDefault();
@@ -53,6 +66,80 @@
 			box.checked = checked;
 		});
 	});
+
+	function deleteSingleCapability(button) {
+		if (button.disabled) {
+			return;
+		}
+
+		var settings = window.TN731UMGCapabilities;
+		var capability = button.getAttribute('data-capability');
+		var formData = new window.FormData();
+		var status = document.getElementById('tn731-umg-capability-status');
+
+		formData.append('action', 'tn731_umg_delete_capability');
+		formData.append('nonce', settings.nonce);
+		formData.append('capability', capability);
+
+		button.disabled = true;
+		button.setAttribute('aria-busy', 'true');
+		button.classList.add('is-loading');
+
+		window.fetch(settings.ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: formData
+		})
+			.then(function(response) {
+				return response.json();
+			})
+			.then(function(response) {
+				if (!response.success || !response.data) {
+					throw new Error(response.data && response.data.message ? response.data.message : settings.error);
+				}
+
+				updateCapabilityCounts(response.data.counts);
+				removeCapabilityRow(button.closest('tr'), settings.emptyGroup);
+				showCapabilityStatus(status, '', false);
+			})
+			.catch(function(error) {
+				button.disabled = false;
+				button.removeAttribute('aria-busy');
+				button.classList.remove('is-loading');
+				showCapabilityStatus(status, error.message || settings.error, true);
+			});
+	}
+
+	function updateCapabilityCounts(counts) {
+		if (!counts) {
+			return;
+		}
+
+		['administrator', 'user', 'subscriber'].forEach(function(role) {
+			var count = document.getElementById('tn731-umg-' + role + '-capability-count');
+			if (count && typeof counts[role] !== 'undefined') {
+				count.textContent = 'Registered (' + counts[role] + ')';
+			}
+		});
+	}
+
+	function removeCapabilityRow(row, emptyGroupLabel) {
+		if (!row || !row.parentElement) {
+			return;
+		}
+
+		var body = row.parentElement;
+		row.remove();
+
+		if (!body.querySelector('tr')) {
+			var emptyRow = document.createElement('tr');
+			var emptyCell = document.createElement('td');
+			emptyCell.colSpan = 5;
+			emptyCell.textContent = emptyGroupLabel;
+			emptyRow.appendChild(emptyCell);
+			body.appendChild(emptyRow);
+		}
+	}
 
 	function updateUserCapability(button) {
 		if (button.disabled) {
@@ -95,10 +182,7 @@
 				button.setAttribute('aria-checked', response.data.enabled ? 'true' : 'false');
 				button.setAttribute('aria-label', response.data.ariaLabel);
 
-				var count = document.getElementById('tn731-umg-user-capability-count');
-				if (count) {
-					count.textContent = 'Registered (' + response.data.userCount + ')';
-				}
+				updateCapabilityCounts({user: response.data.userCount});
 
 				showCapabilityStatus(status, '', false);
 			})
