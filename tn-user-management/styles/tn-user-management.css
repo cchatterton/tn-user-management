@@ -116,19 +116,19 @@
 
 .tn731-umg-capability-heading {
 	margin-top: 24px;
-	scroll-margin-top: 40px;
+	scroll-margin-top: 125px;
 }
 
 .tn731-umg-capability-heading-row {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	margin-top: 24px;
+	justify-content: flex-start;
+	gap: 4px;
+	margin: 24px 0 8px;
 }
 
 .tn731-umg-capability-heading-row .tn731-umg-capability-heading {
-	margin-top: 0;
+	margin: 0;
 }
 
 .tn731-umg-table button.tn731-umg-capability-toggle {
@@ -223,11 +223,26 @@
 	color: #b32d2e;
 }
 
+.tn731-umg-capability-sticky-nav {
+	position: sticky;
+	top: 32px;
+	z-index: 20;
+	margin: 0 0 18px;
+	padding: 8px 0 7px;
+	border-bottom: 1px solid #c3c4c7;
+	background: #f0f0f1;
+	box-shadow: 0 2px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tn731-umg-role-summary {
+	margin: 0 0 5px;
+}
+
 .tn731-umg-section-links {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 4px 8px;
-	margin: 8px 0 18px;
+	margin: 0;
 }
 
 .tn731-umg-add-capability-form {
@@ -245,20 +260,35 @@
 	text-align: center;
 }
 
-.tn731-umg-remove-capability {
+.tn731-umg-capabilities-wrap button.tn731-umg-remove-capability {
+	appearance: none;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	min-width: 32px;
-	min-height: 32px;
+	min-width: 28px;
+	min-height: 28px;
+	margin: 0;
+	padding: 4px;
+	border: 0;
+	border-radius: 3px;
+	background: transparent;
+	box-shadow: none;
 	cursor: pointer;
-	color: #b32d2e;
+	color: #787c82;
 	text-decoration: none;
 }
 
-.tn731-umg-remove-capability:hover,
-.tn731-umg-remove-capability:focus {
-	color: #8a2424;
+.tn731-umg-capabilities-wrap button.tn731-umg-remove-capability:hover,
+.tn731-umg-capabilities-wrap button.tn731-umg-remove-capability:focus {
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+	color: #b32d2e;
+}
+
+.tn731-umg-capabilities-wrap button.tn731-umg-remove-capability:focus-visible {
+	outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+	outline-offset: 1px;
 }
 
 .tn731-umg-remove-capability.is-loading {
@@ -266,15 +296,25 @@
 	opacity: 0.45;
 }
 
-.tn731-umg-remove-capability .dashicons {
+.tn731-umg-capabilities-wrap .tn731-umg-remove-capability .dashicons {
 	font-size: 18px;
 	line-height: 1;
 }
 
 @media screen and (max-width: 782px) {
+	.tn731-umg-capability-sticky-nav {
+		top: 46px;
+	}
+
 	.tn731-umg-add-capability-form {
 		align-items: stretch;
 		flex-direction: column;
 	}
 
+}
+
+@media screen and (max-width: 600px) {
+	.tn731-umg-capability-sticky-nav {
+		top: 0;
+	}
 }

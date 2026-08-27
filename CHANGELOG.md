@@ -2,6 +2,14 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.21 - 2026-08-27
+
+- Removed borders and button chrome from individual and group capability trash controls.
+- Changed trash icons to subtle gray by default with red hover and focus feedback.
+- Moved group trash icons directly inline beside their group headings.
+- Made the role summary and Sections navigation a compact sticky bar below the WordPress admin toolbar, with anchor offsets for unobscured group headings.
+- Kept one-item prefixes in Single capabilities, creating a named group only when at least two capabilities share that prefix.
+
 ## 1.20 - 2026-08-27
 
 - Added an AJAX trash action to every capability row so individual capabilities, including unprefixed Singles, can be removed from every stored role without reloading the page.
