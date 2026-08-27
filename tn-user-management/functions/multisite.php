@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 |--------------------------------------------------------------------------
 |
 | - administrator and subscriber are repaired if missing
-| - user role must match administrator
+| - user role matches administrator except for explicitly excluded capabilities
 | - integration role has no capabilities and cannot authenticate
 | - permission set menu model is based on a hidden reference user
 | - reference user is ensured on activation and Sync Admin Rights
@@ -93,8 +93,12 @@ function tn731_umg_grant_admin_caps_to_user_role( $allcaps, $caps, $args, $user 
 		return $allcaps;
 	}
 
+	$excluded_capabilities = function_exists( 'tn731_umg_get_user_excluded_capabilities' )
+		? tn731_umg_get_user_excluded_capabilities()
+		: array();
+
 	foreach ( (array) $admin_role->capabilities as $cap => $grant ) {
-		if ( $grant ) {
+		if ( $grant && ! in_array( $cap, $excluded_capabilities, true ) ) {
 			$allcaps[ $cap ] = true;
 		}
 	}
@@ -329,7 +333,14 @@ function tn731_umg_sync_user_role_from_admin() {
 		return;
 	}
 
-	$admin_caps = (array) $admin_role->capabilities;
+	$admin_caps            = (array) $admin_role->capabilities;
+	$excluded_capabilities = function_exists( 'tn731_umg_get_user_excluded_capabilities' )
+		? tn731_umg_get_user_excluded_capabilities()
+		: array();
+
+	foreach ( $excluded_capabilities as $capability ) {
+		unset( $admin_caps[ $capability ] );
+	}
 
 	remove_role( 'user' );
 	add_role( 'user', 'User', $admin_caps );

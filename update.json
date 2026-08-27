@@ -1,0 +1,4 @@
+{
+  "version": "1.17",
+  "body": "Adds User-only capability toggles and confirmed cleanup for obsolete capability groups."
+}

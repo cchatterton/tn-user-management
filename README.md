@@ -2,11 +2,11 @@
 
 TN User Management provides a deliberately simple user-governance model for WordPress: people either have operational permission or they do not.
 
-- **Administrator** and **User** are permitted roles. Both receive the same WordPress capabilities.
+- **Administrator** and **User** are permitted roles. User receives Administrator capabilities by default, with explicit exclusions managed from the Capabilities screen.
 - **Subscriber** is the non-permitted human role. It does not receive the elevated capabilities shared by Administrator and User.
 - **Integration** is a non-human, database-only role. It has no effective capabilities and cannot log in.
 
-For permitted users, the plugin controls which parts of the WordPress admin interface they need to see. It does not create progressively weaker versions of the User role by removing capabilities.
+For permitted users, the plugin controls which parts of the WordPress admin interface they need to see. Administrators can also make explicit User-role capability exceptions when menu visibility alone is not sufficient.
 
 ## Philosophy: restrict access, not authority
 
@@ -15,7 +15,7 @@ Traditional WordPress role design often creates several capability tiers and tri
 TN User Management takes a different approach:
 
 1. **Decide whether the person is permitted.** An Administrator or User is permitted; a Subscriber is not.
-2. **Give permitted people consistent authority.** The User role is kept aligned with the Administrator role, including capabilities introduced by other plugins.
+2. **Give permitted people consistent authority by default.** The User role follows the Administrator role, including capabilities introduced by other plugins, unless an administrator explicitly disables a capability for User.
 3. **Shape the working interface.** Permission Sets determine which admin menus are visible to each User, so they see the areas relevant to their work.
 4. **Use Administrator for governance.** Administrators retain the full admin interface and manage roles, capabilities, Permission Sets, and content-access settings.
 
@@ -27,14 +27,14 @@ This separates two concerns that WordPress commonly combines:
 The result is a binary trust model with a tailored workspace, rather than a hierarchy of partially trusted operator roles.
 
 > [!IMPORTANT]
-> Permission Sets remove admin menu items; they do not revoke the underlying WordPress capabilities or act as an authorization boundary for direct URLs, custom code, REST requests, or third-party interfaces. A User remains as capable as an Administrator unless the explicit **Own content only** rule applies. Use the Subscriber role when a human must not have operator authority.
+> Permission Sets remove admin menu items; they do not revoke the underlying WordPress capabilities or act as an authorization boundary for direct URLs, custom code, REST requests, or third-party interfaces. User capability toggles and the explicit **Own content only** rule are authorization controls. Use the Subscriber role when a human must not have operator authority.
 
 ## Access model
 
 | Role | Intended use | Effective authority | Admin interface |
 | --- | --- | --- | --- |
 | Administrator | Site governance and unrestricted administration | Administrator capabilities | Full interface; Permission Sets do not apply |
-| User | Trusted day-to-day operator | Kept in sync with Administrator capabilities | Tailored by assigned Permission Sets |
+| User | Trusted day-to-day operator | Administrator capabilities by default, less explicit exclusions | Tailored by assigned Permission Sets |
 | Subscriber | Human without operational permission | Standard Subscriber capabilities only | No elevated operator authority |
 | Integration | Database identity for integrations | No effective capabilities | Authentication is blocked and existing sessions are ended |
 
@@ -42,13 +42,14 @@ On multisite, Super Administrators also bypass Permission Set visibility rules.
 
 ## What the plugin delivers
 
-### Administrator-equivalent User role
+### Administrator-aligned User role
 
-The plugin creates and maintains a `user` role whose capabilities match the current `administrator` role.
+The plugin creates and maintains a `user` role whose capabilities match the current `administrator` role by default.
 
 - The role is synchronised during activation and when **Sync Admin Rights** is selected on the Plugins screen.
-- Administrator capabilities are also granted to User accounts at runtime. This keeps the two roles aligned when another plugin adds a capability after the last stored-role sync.
+- Administrator capabilities are also granted to User accounts at runtime, except for capabilities explicitly disabled for User. This keeps the two roles aligned when another plugin adds a capability after the last stored-role sync.
 - Capabilities added from the plugin's **Capabilities** screen are added to both roles.
+- Clicking **Yes** or **No** in the User column disables or enables that capability for the User role only. Explicit exclusions survive activation and **Sync Admin Rights**.
 - Administrator accounts are not affected by Permission Set menu filtering.
 
 ### Permission Sets
@@ -71,7 +72,7 @@ The available menu catalogue is captured from the active WordPress installation,
 
 An Administrator can assign one of two content modes to an account with the User role:
 
-- **All content** — the default. The User can act on content according to their Administrator-equivalent capabilities.
+- **All content** — the default. The User can act on content according to the capabilities currently enabled for the User role.
 - **Own content only** — the User can still view public content created by others but cannot edit or delete another author's content.
 
 The ownership rule applies to public post types and is an explicit capability restriction, not just a hidden menu. It does not apply to Administrators or multisite Super Administrators. A missing or invalid setting defaults to **All content**.
@@ -83,7 +84,8 @@ The **Permission Sets → Capabilities** screen compares the capabilities held b
 - Capabilities are grouped by the text before the first underscore.
 - Capabilities created through this screen appear in a dedicated **Custom** group.
 - A new capability is added to both Administrator and User.
-- Only capabilities created and tracked by this plugin can be removed from this screen.
+- Capabilities created and tracked by this plugin can be removed individually from both Administrator and User.
+- Prefix-based groups, such as `smartslider_*`, can be removed from every stored role on the current site after confirmation. WordPress does not provide a reliable registry of active capabilities, so the plugin does not guess which groups are obsolete.
 - The Integration role always has no effective capabilities.
 
 ### Email as username

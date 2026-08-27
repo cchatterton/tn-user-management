@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.17 - 2026-08-27
+
+- Made Yes and No values in the User capability column clickable so administrators can remove or restore a capability for User only.
+- Preserved explicit User capability exclusions during activation, runtime inheritance, and Sync Admin Rights while keeping new activations enabled by default.
+- Added confirmed prefix-group cleanup to remove obsolete capability sets from every stored role on the current site.
+
 ## 1.16 - 2026-08-24
 
 - Restored the View details row link when WordPress does not provide one.

@@ -123,6 +123,29 @@
 	scroll-margin-top: 40px;
 }
 
+.tn731-umg-capability-heading-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 24px;
+}
+
+.tn731-umg-capability-heading-row .tn731-umg-capability-heading {
+	margin-top: 0;
+}
+
+.tn731-umg-capability-toggle {
+	min-width: 44px;
+	min-height: 32px;
+	cursor: pointer;
+}
+
+.tn731-umg-capability-toggle:focus-visible {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
+}
+
 .tn731-umg-section-links {
 	display: flex;
 	flex-wrap: wrap;
@@ -169,6 +192,11 @@
 @media screen and (max-width: 782px) {
 	.tn731-umg-add-capability-form {
 		align-items: stretch;
+		flex-direction: column;
+	}
+
+	.tn731-umg-capability-heading-row {
+		align-items: flex-start;
 		flex-direction: column;
 	}
 }

@@ -22,6 +22,8 @@ final class TN731_UMG_GitHub_Updater {
 		add_filter( 'plugins_api', array( __CLASS__, 'plugin_information' ), 10, 3 );
 		add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
 		add_action( 'admin_init', array( __CLASS__, 'handle_manual_update_check' ) );
+		add_action( 'admin_notices', array( __CLASS__, 'render_manual_update_notice' ) );
+		add_action( 'network_admin_notices', array( __CLASS__, 'render_manual_update_notice' ) );
 		add_action( 'upgrader_process_complete', array( __CLASS__, 'clear_cache_after_update' ), 10, 2 );
 	}
 
@@ -251,9 +253,45 @@ final class TN731_UMG_GitHub_Updater {
 		delete_site_transient( 'update_plugins' );
 		wp_update_plugins();
 
+		$update_transient = get_site_transient( 'update_plugins' );
+		$update_transient = self::add_update_data( $update_transient );
+
+		if ( is_object( $update_transient ) ) {
+			set_site_transient( 'update_plugins', $update_transient );
+		}
+
+		$plugin_file = plugin_basename( TN731_UMG_PLUGIN_FILE );
+		$result      = get_site_transient( self::ERROR_TRANSIENT )
+			? 'failed'
+			: ( is_object( $update_transient ) && isset( $update_transient->response[ $plugin_file ] ) ? 'available' : 'current' );
+
 		$plugins_url = is_multisite() ? network_admin_url( 'plugins.php' ) : admin_url( 'plugins.php' );
-		wp_safe_redirect( $plugins_url );
+		wp_safe_redirect( add_query_arg( 'tn731_umg_update_result', $result, $plugins_url ) );
 		exit;
+	}
+
+	public static function render_manual_update_notice() {
+
+		if ( ! current_user_can( 'update_plugins' ) || empty( $_GET['tn731_umg_update_result'] ) || ! is_scalar( $_GET['tn731_umg_update_result'] ) ) {
+			return;
+		}
+
+		$result = sanitize_key( wp_unslash( $_GET['tn731_umg_update_result'] ) );
+
+		if ( 'available' === $result ) {
+			$message = __( 'A TN User Management update is available below.', 'tn-user-management' );
+			$class   = 'notice notice-success is-dismissible';
+		} elseif ( 'current' === $result ) {
+			$message = __( 'TN User Management is up to date.', 'tn-user-management' );
+			$class   = 'notice notice-success is-dismissible';
+		} elseif ( 'failed' === $result ) {
+			$message = __( 'TN User Management could not check for updates. Please try again later.', 'tn-user-management' );
+			$class   = 'notice notice-error is-dismissible';
+		} else {
+			return;
+		}
+
+		echo '<div class="' . esc_attr( $class ) . '"><p>' . esc_html( $message ) . '</p></div>';
 	}
 
 	public static function clear_cache_after_update( $upgrader, $options ) {
@@ -273,11 +311,13 @@ final class TN731_UMG_GitHub_Updater {
 	}
 
 	private static function get_latest_release() {
+		static $forced_cache_cleared = false;
 
 		$forced_check = self::is_forced_update_check();
 
-		if ( $forced_check ) {
+		if ( $forced_check && ! $forced_cache_cleared ) {
 			self::clear_release_cache();
+			$forced_cache_cleared = true;
 		}
 
 		$release = get_site_transient( self::RELEASE_TRANSIENT );
@@ -290,48 +330,21 @@ final class TN731_UMG_GitHub_Updater {
 			return array();
 		}
 
-		$response = wp_remote_get(
-			'https://api.github.com/repos/' . self::OWNER . '/' . self::REPO . '/releases/latest',
-			array(
-				'timeout' => 10,
-				'headers' => array(
-					'Accept'     => 'application/vnd.github+json',
-					'User-Agent' => 'TN-User-Management/' . TN731_UMG_VERSION,
-				),
-			)
-		);
+		$release = self::get_manifest_release();
 
-		if ( is_wp_error( $response ) ) {
-			self::record_error(
-				array(
-					'type'    => 'wp_error',
-					'message' => $response->get_error_message(),
-				)
-			);
-			return array();
+		if ( empty( $release ) ) {
+			$release = self::get_redirect_release();
 		}
 
-		$response_code = wp_remote_retrieve_response_code( $response );
-
-		if ( 200 !== $response_code ) {
-			self::record_error(
-				array(
-					'type'    => 'http_error',
-					'code'    => $response_code,
-					'message' => wp_remote_retrieve_response_message( $response ),
-					'body'    => substr( wp_strip_all_tags( wp_remote_retrieve_body( $response ) ), 0, 500 ),
-				)
-			);
-			return array();
+		if ( empty( $release ) ) {
+			$release = self::get_api_release();
 		}
 
-		$release = json_decode( wp_remote_retrieve_body( $response ), true );
-
-		if ( ! is_array( $release ) || empty( self::release_version( $release ) ) ) {
+		if ( empty( $release ) ) {
 			self::record_error(
 				array(
-					'type'    => 'json_error',
-					'message' => __( 'GitHub returned release data without a valid version.', 'tn-user-management' ),
+					'type'    => 'release_lookup_failed',
+					'message' => __( 'No valid release source was available.', 'tn-user-management' ),
 				)
 			);
 			return array();
@@ -347,6 +360,99 @@ final class TN731_UMG_GitHub_Updater {
 		return $release;
 	}
 
+	private static function get_manifest_release() {
+
+		$response = wp_remote_get(
+			'https://raw.githubusercontent.com/' . self::OWNER . '/' . self::REPO . '/main/update.json',
+			array(
+				'timeout' => 10,
+				'headers' => array(
+					'User-Agent' => 'TN-User-Management/' . TN731_UMG_VERSION,
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return array();
+		}
+
+		$manifest = json_decode( wp_remote_retrieve_body( $response ), true );
+		$version  = is_array( $manifest ) && isset( $manifest['version'] ) ? trim( (string) $manifest['version'] ) : '';
+
+		if ( ! self::is_valid_version( $version ) ) {
+			return array();
+		}
+
+		return self::create_release_data(
+			$version,
+			isset( $manifest['body'] ) ? sanitize_textarea_field( (string) $manifest['body'] ) : ''
+		);
+	}
+
+	private static function get_redirect_release() {
+
+		$response = wp_remote_get(
+			self::repository_url() . '/releases/latest',
+			array(
+				'timeout'     => 10,
+				'redirection' => 0,
+				'headers'     => array(
+					'User-Agent' => 'TN-User-Management/' . TN731_UMG_VERSION,
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			return array();
+		}
+
+		$location = wp_remote_retrieve_header( $response, 'location' );
+		$pattern  = '#^' . preg_quote( self::repository_url(), '#' ) . '/releases/tag/v?([^/?#]+)$#i';
+
+		if ( ! is_string( $location ) || ! preg_match( $pattern, $location, $matches ) || ! self::is_valid_version( $matches[1] ) ) {
+			return array();
+		}
+
+		return self::create_release_data( $matches[1], '' );
+	}
+
+	private static function get_api_release() {
+
+		$response = wp_remote_get(
+			'https://api.github.com/repos/' . self::OWNER . '/' . self::REPO . '/releases/latest',
+			array(
+				'timeout' => 10,
+				'headers' => array(
+					'Accept'     => 'application/vnd.github+json',
+					'User-Agent' => 'TN-User-Management/' . TN731_UMG_VERSION,
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return array();
+		}
+
+		$release = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		return is_array( $release ) && ! empty( self::release_version( $release ) ) ? $release : array();
+	}
+
+	private static function create_release_data( $version, $body ) {
+
+		return array(
+			'tag_name' => 'v' . $version,
+			'body'     => $body,
+			'html_url' => self::repository_url() . '/releases/tag/v' . rawurlencode( $version ),
+			'assets'   => array(
+				array(
+					'name'                 => self::ASSET_NAME,
+					'browser_download_url' => self::repository_url() . '/releases/download/v' . rawurlencode( $version ) . '/' . self::ASSET_NAME,
+				),
+			),
+		);
+	}
+
 	private static function is_forced_update_check() {
 
 		if ( ! current_user_can( 'update_plugins' ) ) {
@@ -359,6 +465,7 @@ final class TN731_UMG_GitHub_Updater {
 		$actions     = array( 'update-selected', 'upgrade-plugin', 'do-plugin-upgrade' );
 
 		return ( '' !== $force_check && '0' !== $force_check )
+			|| '1' === self::request_value( 'tn731_umg_check_updates' )
 			|| in_array( $action, $actions, true )
 			|| in_array( $action_two, $actions, true );
 	}
@@ -391,11 +498,15 @@ final class TN731_UMG_GitHub_Updater {
 	private static function release_version( $release ) {
 		$version = ltrim( (string) ( $release['tag_name'] ?? '' ), 'vV' );
 
-		if ( ! preg_match( '/^\d+(?:\.\d+)+(?:[-+][0-9A-Za-z.-]+)?$/', $version ) ) {
+		if ( ! self::is_valid_version( $version ) ) {
 			return '';
 		}
 
 		return $version;
+	}
+
+	private static function is_valid_version( $version ) {
+		return is_string( $version ) && 1 === preg_match( '/^\d+(?:\.\d+)+(?:[-+][0-9A-Za-z.-]+)?$/', $version );
 	}
 
 	private static function release_asset_url( $release ) {

@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.16
+- Version: 1.17
 - Status: Production
 
 ## Purpose
@@ -10,10 +10,12 @@ TN User Management provides email-as-username handling, one-time username migrat
 
 ## Key Features
 
-- Keeps the User role aligned with Administrator capabilities.
+- Keeps the User role aligned with Administrator capabilities by default, with explicit per-capability User exclusions.
 - Provides permission sets that control the admin menus visible to User accounts.
 - Adds a database-only Integration role with no capabilities and no login access.
 - Adds and removes explicitly managed capabilities for Administrator and User.
+- Lets administrators toggle individual capabilities on or off for the User role.
+- Removes obsolete prefix-based capability groups from every stored role on the current site after confirmation.
 - Groups manually added capabilities into a dedicated Custom section.
 - Groups capability comparisons by the text before the first underscore.
 - Supports per-user All content or Own content only editing rules across public post types.
@@ -38,7 +40,8 @@ tn-user-management/
 
 - Requires WordPress 6.0 or newer and PHP 8.1 or newer.
 - Integration accounts are intentionally blocked from authentication and have all effective capabilities denied.
-- Capabilities created on the Capabilities page are tracked in the `tn731_umg_manual_capabilities` option so only those capabilities can be removed there.
+- Capabilities created on the Capabilities page are tracked in the `tn731_umg_manual_capabilities` option so they can be removed individually from Administrator and User.
+- Capabilities intentionally removed from User are stored in `tn731_umg_user_excluded_capabilities` so activation, runtime inheritance, and manual synchronisation preserve the exclusion.
 - Per-user content access is stored in `tn731_umg_content_access`; missing or invalid values default to unrestricted All content access.
 - Username migration runs once in each activation request, and its activation result notice is consumed after one display.
 - GitHub updates require a public release tagged with the plugin version and an attached asset named `tn-user-management.zip`.

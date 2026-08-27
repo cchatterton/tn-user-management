@@ -16,6 +16,16 @@
 			return;
 		}
 
+		if (target.classList.contains('tn731-umg-confirm-remove-capability-group')) {
+			var capabilityGroup = target.getAttribute('data-capability-group') || 'this capability group';
+
+			if (!window.confirm('Remove ' + capabilityGroup + ' from every stored role on this site? This cannot be undone automatically.')) {
+				event.preventDefault();
+			}
+
+			return;
+		}
+
 		if (!target.classList.contains('tn731-umg-select-all') && !target.classList.contains('tn731-umg-deselect-all')) {
 			return;
 		}
