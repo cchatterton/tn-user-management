@@ -1,4 +1,4 @@
 {
-  "version": "1.29",
-  "body": "Displays generated capability quicklinks and group headings with an uppercase first character."
+  "version": "1.30",
+  "body": "Adds GPL v2-or-later licensing and a WordPress.org-compatible plugin readme."
 }

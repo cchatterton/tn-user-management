@@ -1,7 +1,8 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.29
+- Version: 1.30
+- License: GPL v2 or later
 - Status: Production
 
 ## Purpose
@@ -31,7 +32,9 @@ TN User Management provides email-as-username handling, one-time username migrat
 ```text
 tn-user-management/
 ├── tn-user-management.php
+├── LICENSE
 ├── readme.md
+├── readme.txt
 ├── functions/
 ├── scripts/
 └── styles/
@@ -40,6 +43,7 @@ tn-user-management/
 ## Important Notes
 
 - Requires WordPress 6.0 or newer and PHP 8.1 or newer.
+- Licensed under GPL v2 or later.
 - Integration accounts are intentionally blocked from authentication and have all effective capabilities denied.
 - Capabilities created on the Capabilities page are tracked in the `tn731_umg_manual_capabilities` option and are cleaned from that tracking when removed.
 - Capabilities intentionally removed from User are stored in `tn731_umg_user_excluded_capabilities` so activation, runtime inheritance, and manual synchronisation preserve the exclusion.

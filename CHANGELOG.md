@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.30 - 2026-08-27
+
+- Declared GPL v2-or-later licensing in the plugin header and package metadata.
+- Added a GPL v2-or-later licence file to the distributable plugin.
+- Added a WordPress.org-compatible `readme.txt` with verified contributor, compatibility, installation, safety, FAQ, external-service, and changelog information.
+
 ## 1.29 - 2026-08-27
 
 - Displayed generated capability quicklinks and group headings with an uppercase first character while preserving their lowercase internal keys.
