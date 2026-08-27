@@ -1,4 +1,4 @@
 {
-  "version": "1.27",
-  "body": "Fixes clicked-section highlighting and refines the sticky navigation with passive grey links and blue active text."
+  "version": "1.28",
+  "body": "Improves capability navigation with no default selection, precise section jumps, and reliable final-section activation."
 }

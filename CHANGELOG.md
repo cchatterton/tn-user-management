@@ -2,6 +2,14 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.28 - 2026-08-27
+
+- Activated the final capability navigation link when the viewport reaches the bottom of the page.
+- Fixed the last group never becoming active when its heading cannot reach the normal scroll activation line.
+- Added viewport-relative blank space beneath the final capability group so it can scroll naturally into the active position.
+- Made section links calculate their jump position from the live WordPress toolbar and sticky-menu heights, placing the selected heading directly beneath the menu.
+- Left the navigation unselected before the first capability section is reached, including after scrolling back to the top.
+
 ## 1.27 - 2026-08-27
 
 - Aligned the sticky navigation activation threshold with each capability heading's anchor scroll offset.

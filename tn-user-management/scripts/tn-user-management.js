@@ -277,16 +277,22 @@
 			}
 
 			var navActivationLine = nav.getBoundingClientRect().bottom + 16;
-			var nextActiveLink = sectionLinks[0].link;
+			var nextActiveLink = null;
+			var documentHeight = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+			var isAtPageEnd = Math.ceil(window.scrollY + window.innerHeight) >= documentHeight - 2;
 
-			sectionLinks.forEach(function(item) {
-				var sectionScrollMargin = parseFloat(window.getComputedStyle(item.section).scrollMarginTop) || 0;
-				var activationLine = Math.max(navActivationLine, sectionScrollMargin + 1);
+			if (isAtPageEnd) {
+				nextActiveLink = sectionLinks[sectionLinks.length - 1].link;
+			} else {
+				sectionLinks.forEach(function(item) {
+					var sectionScrollMargin = parseFloat(window.getComputedStyle(item.section).scrollMarginTop) || 0;
+					var activationLine = Math.max(navActivationLine, sectionScrollMargin + 1);
 
-				if (item.section.getBoundingClientRect().top <= activationLine) {
-					nextActiveLink = item.link;
-				}
-			});
+					if (item.section.getBoundingClientRect().top <= activationLine) {
+						nextActiveLink = item.link;
+					}
+				});
+			}
 
 			if (activeSectionLink === nextActiveLink) {
 				return;
@@ -314,6 +320,31 @@
 			framePending = true;
 			window.requestAnimationFrame(updateStickyNav);
 		}
+
+		nav.addEventListener('click', function(event) {
+			var link = event.target.closest('a[href^="#"]');
+
+			if (!link || !nav.contains(link)) {
+				return;
+			}
+
+			var item = sectionLinks.find(function(sectionLink) {
+				return sectionLink.link === link;
+			});
+
+			if (!item) {
+				return;
+			}
+
+			event.preventDefault();
+
+			var anchorOffset = getToolbarOffset() + nav.getBoundingClientRect().height;
+			var targetTop = item.section.getBoundingClientRect().top + window.scrollY - anchorOffset;
+
+			window.scrollTo(0, Math.max(0, Math.round(targetTop)));
+			window.history.pushState(null, '', link.getAttribute('href'));
+			queueStickyNavUpdate();
+		});
 
 		window.addEventListener('scroll', queueStickyNavUpdate, {passive: true});
 		window.addEventListener('resize', queueStickyNavUpdate);

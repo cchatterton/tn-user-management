@@ -2,6 +2,10 @@
 	margin: 0 0 8px;
 }
 
+.tn731-umg-capabilities-wrap {
+	padding-bottom: calc(100vh - 6rem);
+}
+
 .tn731-umg-group {
 	margin: 0 0 20px;
 	padding: 12px;
@@ -115,8 +119,8 @@
 }
 
 .tn731-umg-capability-heading {
-	margin-top: 24px;
-	scroll-margin-top: 125px;
+	margin-top: 1.5rem;
+	scroll-margin-top: 6rem;
 }
 
 .tn731-umg-capability-heading-row {
