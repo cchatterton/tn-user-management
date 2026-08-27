@@ -1,4 +1,4 @@
 {
-  "version": "1.21",
-  "body": "Adds a sticky capability navigator, subtle inline cleanup controls, and keeps one-item prefixes in Single capabilities."
+  "version": "1.22",
+  "body": "Makes the capability Sections navigator reliably stay below the WordPress toolbar while scrolling."
 }

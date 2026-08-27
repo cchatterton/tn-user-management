@@ -2,6 +2,11 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.22 - 2026-08-27
+
+- Added a WordPress-toolbar-aware fixed-position fallback so the role summary and Sections navigator remain visible in admin layouts where native sticky positioning is ineffective.
+- Preserved the navigator's original page space and content width to prevent jumping or horizontal misalignment while it is fixed.
+
 ## 1.21 - 2026-08-27
 
 - Removed borders and button chrome from individual and group capability trash controls.

@@ -3,6 +3,7 @@
 
 	document.addEventListener('DOMContentLoaded', function() {
 		syncUsernameFromEmail();
+		initCapabilityStickyNav();
 	});
 
 	document.addEventListener('click', function(event) {
@@ -204,6 +205,70 @@
 		status.textContent = message;
 		status.classList.toggle('is-error', isError);
 		status.hidden = !message;
+	}
+
+	function initCapabilityStickyNav() {
+		var nav = document.querySelector('.tn731-umg-capability-sticky-nav');
+
+		if (!nav) {
+			return;
+		}
+
+		var spacer = document.createElement('div');
+		var framePending = false;
+		var naturalMarginBottom = parseFloat(window.getComputedStyle(nav).marginBottom) || 0;
+
+		spacer.className = 'tn731-umg-capability-sticky-spacer';
+		spacer.setAttribute('aria-hidden', 'true');
+		nav.parentNode.insertBefore(spacer, nav);
+
+		function getToolbarOffset() {
+			var toolbar = document.getElementById('wpadminbar');
+
+			if (!toolbar || window.getComputedStyle(toolbar).position !== 'fixed') {
+				return 0;
+			}
+
+			return Math.round(toolbar.getBoundingClientRect().height);
+		}
+
+		function updateStickyNav() {
+			var toolbarOffset = getToolbarOffset();
+			var anchor = nav.classList.contains('is-fixed') ? spacer : nav;
+			var shouldFix = anchor.getBoundingClientRect().top <= toolbarOffset;
+
+			if (shouldFix) {
+				var parentRect = nav.parentElement.getBoundingClientRect();
+				var navHeight = nav.getBoundingClientRect().height;
+
+				spacer.style.height = navHeight + naturalMarginBottom + 'px';
+				nav.style.setProperty('--tn731-umg-sticky-top', toolbarOffset + 'px');
+				nav.style.setProperty('--tn731-umg-sticky-left', Math.round(parentRect.left) + 'px');
+				nav.style.setProperty('--tn731-umg-sticky-width', Math.round(parentRect.width) + 'px');
+				nav.classList.add('is-fixed');
+			} else {
+				nav.classList.remove('is-fixed');
+				nav.style.removeProperty('--tn731-umg-sticky-top');
+				nav.style.removeProperty('--tn731-umg-sticky-left');
+				nav.style.removeProperty('--tn731-umg-sticky-width');
+				spacer.style.height = '';
+			}
+
+			framePending = false;
+		}
+
+		function queueStickyNavUpdate() {
+			if (framePending) {
+				return;
+			}
+
+			framePending = true;
+			window.requestAnimationFrame(updateStickyNav);
+		}
+
+		window.addEventListener('scroll', queueStickyNavUpdate, {passive: true});
+		window.addEventListener('resize', queueStickyNavUpdate);
+		queueStickyNavUpdate();
 	}
 
 	function syncUsernameFromEmail() {

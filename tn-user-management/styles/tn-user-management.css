@@ -234,6 +234,21 @@
 	box-shadow: 0 2px 3px rgba(0, 0, 0, 0.04);
 }
 
+.tn731-umg-capability-sticky-nav.is-fixed {
+	position: fixed;
+	top: var(--tn731-umg-sticky-top, 32px);
+	left: var(--tn731-umg-sticky-left, auto);
+	width: var(--tn731-umg-sticky-width, auto);
+	margin: 0;
+	padding-right: 10px;
+	padding-left: 10px;
+	box-sizing: border-box;
+}
+
+.tn731-umg-capability-sticky-spacer {
+	height: 0;
+}
+
 .tn731-umg-role-summary {
 	margin: 0 0 5px;
 }
