@@ -135,7 +135,7 @@
 		if (!body.querySelector('tr')) {
 			var emptyRow = document.createElement('tr');
 			var emptyCell = document.createElement('td');
-			emptyCell.colSpan = 5;
+			emptyCell.colSpan = 4;
 			emptyCell.textContent = emptyGroupLabel;
 			emptyRow.appendChild(emptyCell);
 			body.appendChild(emptyRow);

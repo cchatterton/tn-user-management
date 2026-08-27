@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.24 - 2026-08-27
+
+- Removed the Administrator, User, and Subscriber registered-capability summary from the sticky navigation.
+- Removed the Subscriber column from every capability table without changing the underlying Subscriber role.
+- Rebalanced the remaining capability, Administrator, User, and action columns.
+
 ## 1.23 - 2026-08-27
 
 - Removed the border and box shadow from the capability navigator in both normal and fixed states.

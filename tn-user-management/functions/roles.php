@@ -409,7 +409,6 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 			<col class="tn731-umg-capability-col">
 			<col class="tn731-umg-role-col">
 			<col class="tn731-umg-role-col">
-			<col class="tn731-umg-role-col">
 			<col class="tn731-umg-action-col">
 		</colgroup>
 		<thead>
@@ -417,13 +416,12 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 				<th class="tn731-umg-capability-column"><?php esc_html_e( 'Capability', 'tn-user-management' ); ?></th>
 				<th><?php esc_html_e( 'Administrator', 'tn-user-management' ); ?></th>
 				<th><?php esc_html_e( 'User', 'tn-user-management' ); ?></th>
-				<th><?php esc_html_e( 'Subscriber', 'tn-user-management' ); ?></th>
 				<th class="tn731-umg-action-column"><span class="screen-reader-text"><?php esc_html_e( 'Actions', 'tn-user-management' ); ?></span></th>
 			</tr>
 		</thead>
 		<tbody>
 		<?php if ( empty( $rows ) ) : ?>
-			<tr><td colspan="5"><?php esc_html_e( 'No capabilities in this group.', 'tn-user-management' ); ?></td></tr>
+			<tr><td colspan="4"><?php esc_html_e( 'No capabilities in this group.', 'tn-user-management' ); ?></td></tr>
 		<?php else : ?>
 			<?php foreach ( $rows as $row ) : ?>
 				<tr class="<?php echo $row['diff'] ? 'tn731-umg-diff-row' : ''; ?>">
@@ -445,7 +443,6 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 							&mdash;
 						<?php endif; ?>
 					</td>
-					<td><?php echo $row['sub'] ? esc_html__( 'Yes', 'tn-user-management' ) : '&mdash;'; ?></td>
 					<td class="tn731-umg-action-column">
 						<form method="post" class="tn731-umg-inline-form">
 							<?php wp_nonce_field( 'tn731_umg_manage_capability' ); ?>
@@ -521,11 +518,6 @@ function tn731_umg_render_capabilities_page() {
 		<?php endif; ?>
 
 		<div class="tn731-umg-capability-sticky-nav">
-			<p class="tn731-umg-role-summary">
-				<strong><?php esc_html_e( 'Administrator:', 'tn-user-management' ); ?></strong> <?php if ( $roles['admin'] ) : ?><span id="tn731-umg-administrator-capability-count"><?php echo esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['admin'] ) ) ) ); ?></span><?php else : ?><?php esc_html_e( 'Missing', 'tn-user-management' ); ?><?php endif; ?>
-				&nbsp;|&nbsp; <strong><?php esc_html_e( 'User:', 'tn-user-management' ); ?></strong> <?php if ( $roles['user'] ) : ?><span id="tn731-umg-user-capability-count"><?php echo esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['user'] ) ) ) ); ?></span><?php else : ?><?php esc_html_e( 'Missing', 'tn-user-management' ); ?><?php endif; ?>
-				&nbsp;|&nbsp; <strong><?php esc_html_e( 'Subscriber:', 'tn-user-management' ); ?></strong> <?php if ( $roles['sub'] ) : ?><span id="tn731-umg-subscriber-capability-count"><?php echo esc_html( sprintf( 'Registered (%d)', count( array_filter( $capabilities['sub'] ) ) ) ); ?></span><?php else : ?><?php esc_html_e( 'Missing', 'tn-user-management' ); ?><?php endif; ?>
-			</p>
 			<nav class="tn731-umg-section-links" aria-label="<?php esc_attr_e( 'Capability sections', 'tn-user-management' ); ?>">
 				<strong><?php esc_html_e( 'Sections:', 'tn-user-management' ); ?></strong>
 				<?php $section_number = 0; ?>

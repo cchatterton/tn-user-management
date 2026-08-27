@@ -85,11 +85,11 @@
 }
 
 .tn731-umg-table .tn731-umg-capability-col {
-	width: 50%;
+	width: 55%;
 }
 
 .tn731-umg-table .tn731-umg-role-col {
-	width: 15%;
+	width: 20%;
 }
 
 .tn731-umg-table .tn731-umg-action-col {
@@ -248,10 +248,6 @@
 
 .tn731-umg-capability-sticky-spacer {
 	height: 0;
-}
-
-.tn731-umg-role-summary {
-	margin: 0 0 5px;
 }
 
 .tn731-umg-section-links {

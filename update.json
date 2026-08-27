@@ -1,4 +1,4 @@
 {
-  "version": "1.23",
-  "body": "Refines the sticky capability navigator with flat styling, consistent spacing, and no border or shadow."
+  "version": "1.24",
+  "body": "Removes the role-count summary and Subscriber column from the capability management interface."
 }
