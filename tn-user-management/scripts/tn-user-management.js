@@ -217,6 +217,18 @@
 		var spacer = document.createElement('div');
 		var framePending = false;
 		var naturalMarginBottom = parseFloat(window.getComputedStyle(nav).marginBottom) || 0;
+		var sectionLinks = Array.prototype.map.call(
+			nav.querySelectorAll('a[href^="#"]'),
+			function(link) {
+				return {
+					link: link,
+					section: document.getElementById(link.getAttribute('href').slice(1))
+				};
+			}
+		).filter(function(item) {
+			return item.section;
+		});
+		var activeSectionLink = null;
 
 		spacer.className = 'tn731-umg-capability-sticky-spacer';
 		spacer.setAttribute('aria-hidden', 'true');
@@ -254,7 +266,41 @@
 				spacer.style.height = '';
 			}
 
+			updateActiveSection();
+
 			framePending = false;
+		}
+
+		function updateActiveSection() {
+			if (!sectionLinks.length) {
+				return;
+			}
+
+			var activationLine = nav.getBoundingClientRect().bottom + 16;
+			var nextActiveLink = sectionLinks[0].link;
+
+			sectionLinks.forEach(function(item) {
+				if (item.section.getBoundingClientRect().top <= activationLine) {
+					nextActiveLink = item.link;
+				}
+			});
+
+			if (activeSectionLink === nextActiveLink) {
+				return;
+			}
+
+			sectionLinks.forEach(function(item) {
+				var isActive = item.link === nextActiveLink;
+				item.link.classList.toggle('is-active', isActive);
+
+				if (isActive) {
+					item.link.setAttribute('aria-current', 'location');
+				} else {
+					item.link.removeAttribute('aria-current');
+				}
+			});
+
+			activeSectionLink = nextActiveLink;
 		}
 
 		function queueStickyNavUpdate() {

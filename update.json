@@ -1,4 +1,4 @@
 {
-  "version": "1.24",
-  "body": "Removes the role-count summary and Subscriber column from the capability management interface."
+  "version": "1.25",
+  "body": "Adds a scroll-aware active state to the sticky capability Sections navigation."
 }

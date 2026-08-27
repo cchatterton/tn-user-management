@@ -2,6 +2,11 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.25 - 2026-08-27
+
+- Added scroll-aware highlighting to the sticky capability Sections navigation.
+- Added `aria-current="location"` to the active section link and kept the state synchronized during scrolling and anchor navigation.
+
 ## 1.24 - 2026-08-27
 
 - Removed the Administrator, User, and Subscriber registered-capability summary from the sticky navigation.
