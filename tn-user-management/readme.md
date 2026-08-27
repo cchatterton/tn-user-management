@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.22
+- Version: 1.23
 - Status: Production
 
 ## Purpose

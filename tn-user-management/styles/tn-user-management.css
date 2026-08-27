@@ -228,10 +228,10 @@
 	top: 32px;
 	z-index: 20;
 	margin: 0 0 18px;
-	padding: 8px 0 7px;
-	border-bottom: 1px solid #c3c4c7;
-	background: #f0f0f1;
-	box-shadow: 0 2px 3px rgba(0, 0, 0, 0.04);
+	padding: 1rem 0;
+	border: 0;
+	background: #e4e0e4;
+	box-shadow: none;
 }
 
 .tn731-umg-capability-sticky-nav.is-fixed {
@@ -240,8 +240,9 @@
 	left: var(--tn731-umg-sticky-left, auto);
 	width: var(--tn731-umg-sticky-width, auto);
 	margin: 0;
-	padding-right: 10px;
-	padding-left: 10px;
+	padding: 1rem 0;
+	border: 0;
+	box-shadow: none;
 	box-sizing: border-box;
 }
 

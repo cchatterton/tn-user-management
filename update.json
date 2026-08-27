@@ -1,4 +1,4 @@
 {
-  "version": "1.22",
-  "body": "Makes the capability Sections navigator reliably stay below the WordPress toolbar while scrolling."
+  "version": "1.23",
+  "body": "Refines the sticky capability navigator with flat styling, consistent spacing, and no border or shadow."
 }

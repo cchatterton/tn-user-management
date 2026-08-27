@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.23 - 2026-08-27
+
+- Removed the border and box shadow from the capability navigator in both normal and fixed states.
+- Applied consistent `1rem 0` padding and a `#e4e0e4` background before and after the navigator becomes fixed.
+- Removed fixed-state horizontal padding so the navigator content retains its original alignment.
+
 ## 1.22 - 2026-08-27
 
 - Added a WordPress-toolbar-aware fixed-position fallback so the role summary and Sections navigator remain visible in admin layouts where native sticky positioning is ineffective.
