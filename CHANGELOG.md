@@ -2,6 +2,10 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.26 - 2026-08-27
+
+- Removed the visible `Sections:` label from the sticky capability navigation while retaining its accessible navigation label.
+
 ## 1.25 - 2026-08-27
 
 - Added scroll-aware highlighting to the sticky capability Sections navigation.

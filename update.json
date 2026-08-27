@@ -1,4 +1,4 @@
 {
-  "version": "1.25",
-  "body": "Adds a scroll-aware active state to the sticky capability Sections navigation."
+  "version": "1.26",
+  "body": "Removes the visible Sections label from the sticky capability navigation."
 }

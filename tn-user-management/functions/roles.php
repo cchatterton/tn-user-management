@@ -519,7 +519,6 @@ function tn731_umg_render_capabilities_page() {
 
 		<div class="tn731-umg-capability-sticky-nav">
 			<nav class="tn731-umg-section-links" aria-label="<?php esc_attr_e( 'Capability sections', 'tn-user-management' ); ?>">
-				<strong><?php esc_html_e( 'Sections:', 'tn-user-management' ); ?></strong>
 				<?php $section_number = 0; ?>
 				<?php foreach ( $groups as $group => $group_rows ) : ?>
 					<?php $group_details = tn731_umg_get_capability_group_details( $group ); ?>
