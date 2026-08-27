@@ -276,10 +276,13 @@
 				return;
 			}
 
-			var activationLine = nav.getBoundingClientRect().bottom + 16;
+			var navActivationLine = nav.getBoundingClientRect().bottom + 16;
 			var nextActiveLink = sectionLinks[0].link;
 
 			sectionLinks.forEach(function(item) {
+				var sectionScrollMargin = parseFloat(window.getComputedStyle(item.section).scrollMarginTop) || 0;
+				var activationLine = Math.max(navActivationLine, sectionScrollMargin + 1);
+
 				if (item.section.getBoundingClientRect().top <= activationLine) {
 					nextActiveLink = item.link;
 				}

@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.27 - 2026-08-27
+
+- Aligned the sticky navigation activation threshold with each capability heading's anchor scroll offset.
+- Fixed section links highlighting the preceding group after being clicked.
+- Replaced the filled active-link treatment with passive grey links and understated blue active text, without underlines or backgrounds.
+
 ## 1.26 - 2026-08-27
 
 - Removed the visible `Sections:` label from the sticky capability navigation while retaining its accessible navigation label.
