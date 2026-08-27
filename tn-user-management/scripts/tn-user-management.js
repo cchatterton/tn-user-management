@@ -100,7 +100,7 @@
 					count.textContent = 'Registered (' + response.data.userCount + ')';
 				}
 
-				showCapabilityStatus(status, response.data.message || settings.success, false);
+				showCapabilityStatus(status, '', false);
 			})
 			.catch(function(error) {
 				showCapabilityStatus(status, error.message || settings.error, true);
@@ -119,6 +119,7 @@
 
 		status.textContent = message;
 		status.classList.toggle('is-error', isError);
+		status.hidden = !message;
 	}
 
 	function syncUsernameFromEmail() {

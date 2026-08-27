@@ -2,6 +2,13 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.19 - 2026-08-27
+
+- Replaced the heavy filled capability buttons with compact rounded switch tracks and understated Yes/No labels using the native WordPress admin-theme colour.
+- Removed the conflicting WordPress button-link styling that caused the disabled switch to render incorrectly.
+- Added reduced-motion support while retaining keyboard focus and screen-reader switch semantics.
+- Removed successful-toggle notices because the updated switch state already provides confirmation; failures still show an inline error.
+
 ## 1.18 - 2026-08-27
 
 - Changed User capability Yes/No controls to save through WordPress AJAX without reloading the Capabilities page.

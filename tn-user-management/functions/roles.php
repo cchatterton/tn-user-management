@@ -141,7 +141,6 @@ function tn731_umg_ajax_toggle_user_capability() {
 				$capability
 			),
 			'userCount'  => $user_role ? count( array_filter( (array) $user_role->capabilities ) ) : 0,
-			'message'    => __( 'User capability updated.', 'tn-user-management' ),
 		)
 	);
 }
@@ -367,7 +366,8 @@ function tn731_umg_render_capability_table( $group, $title, $section_id, $rows, 
 								<input type="hidden" name="tn731_umg_capability_action" value="toggle_user">
 								<input type="hidden" name="capability" value="<?php echo esc_attr( $row['cap'] ); ?>">
 								<input type="hidden" name="show" value="<?php echo esc_attr( $show ); ?>">
-								<button type="submit" class="button-link tn731-umg-capability-toggle" role="switch" aria-checked="<?php echo $row['user'] ? 'true' : 'false'; ?>" data-capability="<?php echo esc_attr( $row['cap'] ); ?>" data-enabled="<?php echo $row['user'] ? 'yes' : 'no'; ?>" aria-label="<?php echo esc_attr( sprintf( $row['user'] ? __( 'Remove %s from User', 'tn-user-management' ) : __( 'Add %s to User', 'tn-user-management' ), $row['cap'] ) ); ?>">
+								<button type="submit" class="tn731-umg-capability-toggle" role="switch" aria-checked="<?php echo $row['user'] ? 'true' : 'false'; ?>" data-capability="<?php echo esc_attr( $row['cap'] ); ?>" data-enabled="<?php echo $row['user'] ? 'yes' : 'no'; ?>" aria-label="<?php echo esc_attr( sprintf( $row['user'] ? __( 'Remove %s from User', 'tn-user-management' ) : __( 'Add %s to User', 'tn-user-management' ), $row['cap'] ) ); ?>">
+									<span class="tn731-umg-capability-toggle-track" aria-hidden="true"></span>
 									<span class="tn731-umg-capability-toggle-label" aria-hidden="true"><?php echo $row['user'] ? esc_html__( 'Yes', 'tn-user-management' ) : esc_html__( 'No', 'tn-user-management' ); ?></span>
 								</button>
 							</form>
@@ -446,16 +446,12 @@ function tn731_umg_render_capabilities_page() {
 	?>
 	<div class="wrap tn731-umg-capabilities-wrap">
 		<h1><?php esc_html_e( 'Capabilities', 'tn-user-management' ); ?></h1>
-		<div id="tn731-umg-capability-status" class="tn731-umg-capability-status" role="status" aria-live="polite"></div>
+		<div id="tn731-umg-capability-status" class="tn731-umg-capability-status" role="status" aria-live="polite" hidden></div>
 
 		<?php if ( 'added' === $notice ) : ?>
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Capability added to Administrator and User.', 'tn-user-management' ); ?></p></div>
 		<?php elseif ( 'removed' === $notice ) : ?>
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Manually added capability removed.', 'tn-user-management' ); ?></p></div>
-		<?php elseif ( 'user_removed' === $notice ) : ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Capability removed from User.', 'tn-user-management' ); ?></p></div>
-		<?php elseif ( 'user_added' === $notice ) : ?>
-			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Capability added to User.', 'tn-user-management' ); ?></p></div>
 		<?php elseif ( 'group_removed' === $notice ) : ?>
 			<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Capability group removed from all roles on this site.', 'tn-user-management' ); ?></p></div>
 		<?php elseif ( 'group_empty' === $notice ) : ?>

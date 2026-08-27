@@ -40,7 +40,6 @@ function tn731_umg_enqueue_admin_assets( $hook_suffix ) {
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( 'tn731_umg_toggle_user_capability' ),
-				'success' => __( 'User capability updated.', 'tn-user-management' ),
 				'error'   => __( 'The capability could not be updated. Please try again.', 'tn-user-management' ),
 			)
 		);

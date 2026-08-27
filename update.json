@@ -1,4 +1,4 @@
 {
-  "version": "1.18",
-  "body": "Changes User capability toggles to save through AJAX without reloading the page."
+  "version": "1.19",
+  "body": "Refines User capability controls into compact, accessible slide switches."
 }
