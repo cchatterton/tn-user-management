@@ -376,7 +376,7 @@ function tn731_umg_get_capability_group_details( $group ) {
 	} elseif ( 'Custom' === $group ) {
 		$title = 'Custom capabilities';
 	} else {
-		$title = $group;
+		$title = ucfirst( $group );
 	}
 
 	$id    = 'tn731-umg-capability-group-' . sanitize_html_class( strtolower( $group ) );

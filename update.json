@@ -1,4 +1,4 @@
 {
-  "version": "1.28",
-  "body": "Improves capability navigation with no default selection, precise section jumps, and reliable final-section activation."
+  "version": "1.29",
+  "body": "Displays generated capability quicklinks and group headings with an uppercase first character."
 }

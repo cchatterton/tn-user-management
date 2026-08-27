@@ -2,6 +2,10 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.29 - 2026-08-27
+
+- Displayed generated capability quicklinks and group headings with an uppercase first character while preserving their lowercase internal keys.
+
 ## 1.28 - 2026-08-27
 
 - Activated the final capability navigation link when the viewport reaches the bottom of the page.

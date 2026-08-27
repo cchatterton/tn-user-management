@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.28
+- Version: 1.29
 - Status: Production
 
 ## Purpose
