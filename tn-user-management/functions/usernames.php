@@ -8,6 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 */
 
 add_action( 'admin_init', 'tn731_umg_force_email_username', 1 );
+add_action( 'admin_init', 'tn731_umg_force_skip_confirmation_email', 1 );
 add_action( 'plugins_loaded', 'tn731_umg_disable_legacy_new_user_notifications' );
 add_filter( 'wpmu_validate_user_signup', 'tn731_umg_validate_email_as_username', 20 );
 add_filter( 'wp_send_new_user_notification_to_user', 'tn731_umg_disable_new_user_notification', 10, 2 );
@@ -69,9 +70,28 @@ function tn731_umg_filter_new_user_notification_text( $translation, $text, $doma
 			return __( 'New-user account emails are disabled by TN User Management.', 'tn-user-management' );
 		case 'Add User will set up a new user account on the network and send that person an email with username and password.':
 			return __( 'Add User will set up a new user account on the network. No account email will be sent automatically.', 'tn-user-management' );
+		case 'New users will receive an email letting them know they&#8217;ve been added as a user for your site. This email will also contain their password. Check the box if you do not want the user to receive a welcome email.':
+			return __( 'TN User Management adds users to this site without sending a confirmation or welcome email.', 'tn-user-management' );
 	}
 
 	return $translation;
+}
+
+/**
+ * Add multisite users directly to a subsite without confirmation email.
+ */
+function tn731_umg_force_skip_confirmation_email() {
+	global $pagenow;
+
+	if ( ! is_multisite() || is_network_admin() || 'user-new.php' !== $pagenow ) {
+		return;
+	}
+
+	if ( ! current_user_can( 'manage_network_users' ) || empty( $_POST ) ) {
+		return;
+	}
+
+	$_POST['noconfirmation'] = '1';
 }
 
 /**

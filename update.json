@@ -1,4 +1,4 @@
 {
-  "version": "1.31",
-  "body": "Disables account emails to newly created users and updates the Add User interface accordingly."
+  "version": "1.32",
+  "body": "Adds users directly to multisite subsites without confirmation or welcome emails."
 }

@@ -3,7 +3,7 @@ Contributors: techn
 Tags: user management, user roles, capabilities, permissions, multisite
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 1.31
+Stable tag: 1.32
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -18,6 +18,7 @@ Features include:
 
 * Email addresses as usernames for newly created users.
 * New-user account emails disabled while the plugin is active.
+* Existing and new users added directly to subsites without confirmation or welcome emails.
 * One-time migration of existing usernames to email addresses where no conflict exists.
 * A User role aligned with Administrator capabilities by default, with explicit per-capability exclusions.
 * Permission sets for controlling the admin menus available to User accounts.
@@ -62,6 +63,11 @@ GitHub service information:
 A future WordPress.org-distributed edition must use WordPress.org updates and omit the GitHub update checker.
 
 == Changelog ==
+
+= 1.32 =
+
+* Enforced Skip Confirmation Email for both Add Existing User and Add User on multisite subsites.
+* Kept both subsite controls visibly checked and disabled to reflect the enforced behaviour.
 
 = 1.31 =
 

@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.32 - 2026-08-31
+
+- Enforced Skip Confirmation Email for both Add Existing User and Add User on multisite subsite screens.
+- Kept both subsite controls visibly checked and disabled to reflect the enforced server-side behaviour.
+- Updated subsite help text so it no longer promises confirmation or welcome email.
+
 ## 1.31 - 2026-08-31
 
 - Disabled WordPress account emails to newly created users while retaining administrator notifications.

@@ -384,13 +384,18 @@
 
 	function disableNewUserNotification() {
 		var notificationCheckbox = document.querySelector('#send_user_notification');
+		var confirmationCheckboxes = document.querySelectorAll('input[name="noconfirmation"]');
 
-		if (!notificationCheckbox) {
-			return;
+		if (notificationCheckbox) {
+			notificationCheckbox.checked = false;
+			notificationCheckbox.disabled = true;
+			notificationCheckbox.setAttribute('aria-disabled', 'true');
 		}
 
-		notificationCheckbox.checked = false;
-		notificationCheckbox.disabled = true;
-		notificationCheckbox.setAttribute('aria-disabled', 'true');
+		confirmationCheckboxes.forEach(function(checkbox) {
+			checkbox.checked = true;
+			checkbox.disabled = true;
+			checkbox.setAttribute('aria-disabled', 'true');
+		});
 	}
 })();
