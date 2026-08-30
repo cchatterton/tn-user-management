@@ -8,7 +8,71 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 */
 
 add_action( 'admin_init', 'tn731_umg_force_email_username', 1 );
+add_action( 'plugins_loaded', 'tn731_umg_disable_legacy_new_user_notifications' );
 add_filter( 'wpmu_validate_user_signup', 'tn731_umg_validate_email_as_username', 20 );
+add_filter( 'wp_send_new_user_notification_to_user', 'tn731_umg_disable_new_user_notification', 10, 2 );
+add_filter( 'gettext', 'tn731_umg_filter_new_user_notification_text', 10, 3 );
+
+/**
+ * Prevent WordPress from emailing account details to newly created users.
+ */
+function tn731_umg_disable_new_user_notification( $send, $user ) {
+	return false;
+}
+
+/**
+ * Use admin-only notification callbacks on WordPress 6.0, before the
+ * wp_send_new_user_notification_to_user filter was introduced.
+ */
+function tn731_umg_disable_legacy_new_user_notifications() {
+	global $wp_version;
+
+	if ( version_compare( $wp_version, '6.1', '>=' ) ) {
+		return;
+	}
+
+	$notification_hooks = array(
+		'register_new_user',
+		'edit_user_created_user',
+		'network_site_new_created_user',
+		'network_site_users_created_user',
+		'network_user_new_created_user',
+	);
+
+	foreach ( $notification_hooks as $hook ) {
+		remove_action( $hook, 'wp_send_new_user_notifications', 10 );
+		add_action( $hook, 'tn731_umg_send_admin_new_user_notification', 10 );
+	}
+}
+
+/**
+ * Send only the administrator copy of a new-user notification.
+ */
+function tn731_umg_send_admin_new_user_notification( $user_id ) {
+	wp_new_user_notification( $user_id, null, 'admin' );
+}
+
+/**
+ * Keep the Add User screens consistent with the disabled notification.
+ */
+function tn731_umg_filter_new_user_notification_text( $translation, $text, $domain ) {
+	global $pagenow;
+
+	if ( ! is_admin() || 'user-new.php' !== $pagenow || 'default' !== $domain ) {
+		return $translation;
+	}
+
+	switch ( $text ) {
+		case 'A password reset link will be sent to the user via email.':
+			return __( 'No account email will be sent automatically.', 'tn-user-management' );
+		case 'Send the new user an email about their account.':
+			return __( 'New-user account emails are disabled by TN User Management.', 'tn-user-management' );
+		case 'Add User will set up a new user account on the network and send that person an email with username and password.':
+			return __( 'Add User will set up a new user account on the network. No account email will be sent automatically.', 'tn-user-management' );
+	}
+
+	return $translation;
+}
 
 /**
  * Force username = email on submit.

@@ -3,7 +3,7 @@ Contributors: techn
 Tags: user management, user roles, capabilities, permissions, multisite
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 1.30
+Stable tag: 1.31
 Requires PHP: 8.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -17,6 +17,7 @@ TN User Management provides a structured user-governance system for WordPress an
 Features include:
 
 * Email addresses as usernames for newly created users.
+* New-user account emails disabled while the plugin is active.
 * One-time migration of existing usernames to email addresses where no conflict exists.
 * A User role aligned with Administrator capabilities by default, with explicit per-capability exclusions.
 * Permission sets for controlling the admin menus available to User accounts.
@@ -62,8 +63,12 @@ A future WordPress.org-distributed edition must use WordPress.org updates and om
 
 == Changelog ==
 
+= 1.31 =
+
+* Disabled account emails to newly created users while retaining administrator notifications.
+* Updated Add User screens to show that no account email is sent automatically.
+
 = 1.30 =
 
 * Declared GPL v2-or-later licensing in the plugin package.
 * Added a WordPress.org-compatible `readme.txt` with installation, safety, support, compatibility, and external-service information.
-

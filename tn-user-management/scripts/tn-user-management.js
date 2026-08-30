@@ -3,6 +3,7 @@
 
 	document.addEventListener('DOMContentLoaded', function() {
 		syncUsernameFromEmail();
+		disableNewUserNotification();
 		initCapabilityStickyNav();
 	});
 
@@ -379,5 +380,17 @@
 		syncUsername();
 		emailField.addEventListener('input', syncUsername);
 		emailField.addEventListener('change', syncUsername);
+	}
+
+	function disableNewUserNotification() {
+		var notificationCheckbox = document.querySelector('#send_user_notification');
+
+		if (!notificationCheckbox) {
+			return;
+		}
+
+		notificationCheckbox.checked = false;
+		notificationCheckbox.disabled = true;
+		notificationCheckbox.setAttribute('aria-disabled', 'true');
 	}
 })();

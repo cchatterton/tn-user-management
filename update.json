@@ -1,4 +1,4 @@
 {
-  "version": "1.30",
-  "body": "Adds GPL v2-or-later licensing and a WordPress.org-compatible plugin readme."
+  "version": "1.31",
+  "body": "Disables account emails to newly created users and updates the Add User interface accordingly."
 }

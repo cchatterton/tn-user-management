@@ -2,6 +2,12 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.31 - 2026-08-31
+
+- Disabled WordPress account emails to newly created users while retaining administrator notifications.
+- Disabled the single-site new-user notification checkbox to reflect the enforced behaviour.
+- Updated Add User screen text, including Network Admin, so it no longer promises an account email.
+
 ## 1.30 - 2026-08-27
 
 - Declared GPL v2-or-later licensing in the plugin header and package metadata.

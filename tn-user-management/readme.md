@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.30
+- Version: 1.31
 - License: GPL v2 or later
 - Status: Production
 
@@ -12,6 +12,7 @@ TN User Management provides email-as-username handling, one-time username migrat
 ## Key Features
 
 - Keeps the User role aligned with Administrator capabilities by default, with explicit per-capability User exclusions.
+- Prevents WordPress from sending account emails to newly created users while the plugin is active.
 - Provides permission sets that control the admin menus visible to User accounts.
 - Adds a database-only Integration role with no capabilities and no login access.
 - Adds and removes explicitly managed capabilities for Administrator and User.
