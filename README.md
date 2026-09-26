@@ -124,7 +124,7 @@ The plugin supports network activation and applies its baseline roles and migrat
 Requirements:
 
 - WordPress 7.0 or newer;
-- PHP 8.5 or newer; and
+- PHP 7.4 or newer; and
 - a database backup before first activation, because activation can change existing usernames and role assignments.
 
 Install from a release:
