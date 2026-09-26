@@ -3,8 +3,8 @@ Contributors: techn
 Tags: user management, user roles, capabilities, permissions, multisite
 Requires at least: 7.0
 Tested up to: 7.1.2
-Stable tag: 1.32.1
-Requires PHP: 8.5
+Stable tag: 1.32.2
+Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -63,6 +63,9 @@ GitHub service information:
 A future WordPress.org-distributed edition must use WordPress.org updates and omit the GitHub update checker.
 
 == Changelog ==
+
+= 1.32.2 =
+* Lower the PHP requirement to 7.4 to match WordPress 7.0; update the controller installation compatibility check.
 
 = 1.32.1 =
 * Replace the independent updater with TN Update Controller integration.

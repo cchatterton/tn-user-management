@@ -2,6 +2,11 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.32.2 - 2026-09-26
+
+- Lower the PHP requirement to 7.4, matching WordPress 7.0.
+- Allow the PHP 7.4-compatible TN Update Controller bootstrap.
+
 ## 1.32.1 - 2026-09-26
 
 - Require WordPress 7.0+ and PHP 8.5+ for this release.
