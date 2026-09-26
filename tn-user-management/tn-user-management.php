@@ -2,15 +2,16 @@
 /**
  * Plugin Name: TN User Management
  * Description: Email-as-username, one-time username migration, role normalisation, permission sets, and multisite user governance.
- * Version: 1.32
- * Requires at least: 6.0
- * Requires PHP: 8.1
+ * Version: 1.32.1
+ * Requires at least: 7.0
+ * Requires PHP: 8.5
  * Update URI: https://github.com/cchatterton/tn-user-management
  * Author: Techn
  * Author URI: https://techn.com.au
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Network: true
+ * Techn Controller API: 1
  * Text Domain: tn-user-management
  */
 
@@ -24,7 +25,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 define( 'TN731_UMG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'TN731_UMG_URL', plugin_dir_url( __FILE__ ) );
-define( 'TN731_UMG_VERSION', '1.32' );
+define( 'TN731_UMG_VERSION', '1.32.1' );
 define( 'TN731_UMG_ROLE_SCHEMA_VERSION', '1.0' );
 define( 'TN731_UMG_SITE_ROLE', 'administrator' );
 define( 'TN731_UMG_PLUGIN_FILE', __FILE__ );
@@ -42,7 +43,6 @@ require_once TN731_UMG_PATH . 'functions/multisite.php';
 require_once TN731_UMG_PATH . 'functions/permissions.php';
 require_once TN731_UMG_PATH . 'functions/permissions-ui.php';
 require_once TN731_UMG_PATH . 'functions/roles.php';
-require_once TN731_UMG_PATH . 'functions/github-updater.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -299,3 +299,6 @@ function tn731_umg_admin_notice() {
 		. '.</p>';
 	echo '</div>';
 }
+
+require_once __DIR__ . '/functions/controller-client.php';
+tnuc_client_register(__FILE__, 'tn-user-management');

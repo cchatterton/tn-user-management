@@ -123,8 +123,8 @@ The plugin supports network activation and applies its baseline roles and migrat
 
 Requirements:
 
-- WordPress 6.0 or newer;
-- PHP 8.1 or newer; and
+- WordPress 7.0 or newer;
+- PHP 8.5 or newer; and
 - a database backup before first activation, because activation can change existing usernames and role assignments.
 
 Install from a release:
@@ -194,3 +194,9 @@ The script writes `dist/tn-user-management.zip`, with the `tn-user-management/` 
 ```
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
+
+## Controller migration — 1.32.1
+
+Updates are now supplied by [TN Update Controller](https://github.com/cchatterton/tn-update-controller). The old independent updater has been removed. Plugin identity, feature settings and activation scope are unchanged. Install/activate/check links use local controller detection and never fetch release metadata while rendering. Legacy update guidance below or in historical notes is superseded by this controller integration.
+
+Release order: build and validate the ZIP, publish its matching GitHub release asset, then publish verified controller catalogue metadata. Existing update.json endpoints are maintained only for older, not-yet-migrated installations, after asset verification.

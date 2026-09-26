@@ -1,10 +1,10 @@
 === TN User Management ===
 Contributors: techn
 Tags: user management, user roles, capabilities, permissions, multisite
-Requires at least: 6.0
-Tested up to: 6.9
-Stable tag: 1.32
-Requires PHP: 8.1
+Requires at least: 7.0
+Tested up to: 7.1.2
+Stable tag: 1.32.1
+Requires PHP: 8.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -52,7 +52,7 @@ Yes. It supports multisite and network activation. Network activation applies it
 
 == External services ==
 
-The GitHub-distributed edition contacts GitHub to retrieve update metadata, release packages, the repository readme, and changelog content. These requests occur from the WordPress server and do not intentionally include WordPress user data. GitHub receives the normal connection information associated with an HTTP request, such as the server IP address.
+Update discovery and release details are supplied by TN Update Controller. This plugin does not independently request release metadata, repository readmes or changelogs. The explicit controller-install action downloads its official GitHub release ZIP; see Controller installation service below.
 
 GitHub service information:
 
@@ -63,6 +63,11 @@ GitHub service information:
 A future WordPress.org-distributed edition must use WordPress.org updates and omit the GitHub update checker.
 
 == Changelog ==
+
+= 1.32.1 =
+* Replace the independent updater with TN Update Controller integration.
+* Standardise author and plugin-row links; preserve feature settings and plugin identity.
+* Require WordPress 7.0+ and PHP 8.5+.
 
 = 1.32 =
 
@@ -78,3 +83,13 @@ A future WordPress.org-distributed edition must use WordPress.org updates and om
 
 * Declared GPL v2-or-later licensing in the plugin package.
 * Added a WordPress.org-compatible `readme.txt` with installation, safety, support, compatibility, and external-service information.
+
+== Managed updates ==
+
+Install and activate TN Update Controller to discover and install updates. The plugin row offers Install Techn Update Controller, Activate Techn Update Controller, or Check for updates according to local state and permissions. Feature operation does not require the controller. No release lookup happens while rendering this plugin's row. On multisite the controller must be network active. This plugin release requires WordPress 7.0 and PHP 8.5 or later.
+
+== Controller installation service ==
+
+Only an explicit authorised Install Techn Update Controller action downloads the official controller ZIP from GitHub. No plugin settings or site inventory are submitted; GitHub receives the server IP address and normal request metadata. Routine update discovery is delegated to the installed controller. Repository links open GitHub when selected.
+Terms: https://docs.github.com/en/site-policy/github-terms/github-terms-of-service
+Privacy: https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement
