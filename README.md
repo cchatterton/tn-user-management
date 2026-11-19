@@ -116,6 +116,7 @@ The plugin supports network activation and applies its baseline roles and migrat
 - The activating account is protected before role processing starts.
 - The activating account is granted Super Administrator access and Administrator membership on every site.
 - Existing Super Administrators are added to every site as Administrators.
+- A user granted Super Administrator access later is immediately added to every existing site as an Administrator.
 - Newly created sites receive the baseline roles, the synchronised User role, and the hidden reference account used to discover available menus.
 - Accounts without a role are assigned Subscriber on each applicable site.
 
@@ -149,14 +150,7 @@ After installing a plugin that introduces new capabilities, use **Sync Admin Rig
 
 ## Updates
 
-TN User Management supports native WordPress updates from public GitHub releases. A release must:
-
-- use a `vX.Y` tag matching the plugin version; and
-- include an asset named `tn-user-management.zip`.
-
-The Plugins screen provides **View details**, **GitHub**, and **Check for updates** links. Update metadata is cached to reduce GitHub API requests.
-
-The **View details** modal renders its Description from this README and its Changelog from the repository's `CHANGELOG.md`. Rendered content is cached for six hours and falls back to local explanatory links if GitHub is temporarily unavailable.
+TN User Management receives managed updates through [TN Update Controller](https://github.com/cchatterton/tn-update-controller). The Plugins screen provides local controller install, activation, and update-check actions according to the controller's current state. The feature plugin does not perform its own release lookup while rendering the plugin row.
 
 ## Building a release
 

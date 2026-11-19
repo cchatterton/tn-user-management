@@ -3,7 +3,7 @@ Contributors: techn
 Tags: user management, user roles, capabilities, permissions, multisite
 Requires at least: 7.0
 Tested up to: 7.1.2
-Stable tag: 1.32.2
+Stable tag: 1.33
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -26,6 +26,7 @@ Features include:
 * Capability management with AJAX User-role toggles and capability cleanup controls.
 * A database-only Integration role that is blocked from authentication.
 * Multisite and network-activation support.
+* Newly granted Super Admins added to every existing site as Administrators.
 
 Important: activation can update existing usernames, create or synchronise plugin-managed roles, and create an internal reference user. Test the plugin on a staging site and back up the WordPress database before activation.
 
@@ -64,6 +65,9 @@ A future WordPress.org-distributed edition must use WordPress.org updates and om
 
 == Changelog ==
 
+= 1.33 =
+* Add newly granted Super Admins to every existing multisite site as Administrators immediately.
+
 = 1.32.2 =
 * Lower the PHP requirement to 7.4 to match WordPress 7.0; update the controller installation compatibility check.
 
@@ -89,7 +93,7 @@ A future WordPress.org-distributed edition must use WordPress.org updates and om
 
 == Managed updates ==
 
-Install and activate TN Update Controller to discover and install updates. The plugin row offers Install Techn Update Controller, Activate Techn Update Controller, or Check for updates according to local state and permissions. Feature operation does not require the controller. No release lookup happens while rendering this plugin's row. On multisite the controller must be network active. This plugin release requires WordPress 7.0 and PHP 8.5 or later.
+Install and activate TN Update Controller to discover and install updates. The plugin row offers Install Techn Update Controller, Activate Techn Update Controller, or Check for updates according to local state and permissions. Feature operation does not require the controller. No release lookup happens while rendering this plugin's row. On multisite the controller must be network active. This plugin release requires WordPress 7.0 and PHP 7.4 or later.
 
 == Controller installation service ==
 

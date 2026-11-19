@@ -1,7 +1,7 @@
 # TN User Management
 
 - Author: Techn
-- Version: 1.32
+- Version: 1.33
 - License: GPL v2 or later
 - Status: Production
 
@@ -23,9 +23,10 @@ TN User Management provides email-as-username handling, one-time username migrat
 - Groups manually added capabilities into a dedicated Custom section.
 - Uses underscores to identify grouped capabilities and names each group from the text before the first underscore.
 - Supports per-user All content or Own content only editing rules across public post types.
-- Supports native WordPress updates from public GitHub releases.
+- Supports managed WordPress updates through TN Update Controller.
 - Supports WordPress multisite and network activation.
 - Preserves the activating user's Administrator access and grants Super Admin plus per-site Administrator access on multisite.
+- Adds newly granted Super Admins to every existing site as Administrators immediately.
 - Shows assigned user email addresses directly on the Permission Sets list without requiring an admin-columns plugin.
 - Renders the GitHub README and complete repository changelog in the WordPress plugin-details modal.
 
@@ -44,14 +45,14 @@ tn-user-management/
 
 ## Important Notes
 
-- Requires WordPress 6.0 or newer and PHP 8.1 or newer.
+- Requires WordPress 7.0 or newer and PHP 7.4 or newer.
 - Licensed under GPL v2 or later.
 - Integration accounts are intentionally blocked from authentication and have all effective capabilities denied.
 - Capabilities created on the Capabilities page are tracked in the `tn731_umg_manual_capabilities` option and are cleaned from that tracking when removed.
 - Capabilities intentionally removed from User are stored in `tn731_umg_user_excluded_capabilities` so activation, runtime inheritance, and manual synchronisation preserve the exclusion.
 - Per-user content access is stored in `tn731_umg_content_access`; missing or invalid values default to unrestricted All content access.
 - Username migration runs once in each activation request, and its activation result notice is consumed after one display.
-- GitHub updates require a public release tagged with the plugin version and an attached asset named `tn-user-management.zip`.
+- Managed updates are supplied through TN Update Controller.
 
 ## Future Considerations
 

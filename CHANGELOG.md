@@ -2,6 +2,11 @@
 
 All notable changes to TN User Management are recorded here.
 
+## 1.33 - 2026-11-20
+
+- Added a `granted_super_admin` handler that immediately adds or promotes the newly granted Super Admin to Administrator on every existing site.
+- Reused the same per-user synchronisation routine for activation-time Super Admin reconciliation.
+
 ## 1.32.2 - 2026-09-26
 
 - Lower the PHP requirement to 7.4, matching WordPress 7.0.

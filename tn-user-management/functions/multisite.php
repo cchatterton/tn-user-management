@@ -407,6 +407,48 @@ function tn731_umg_on_initialize_site( $new_site ) {
 |--------------------------------------------------------------------------
 */
 
+add_action( 'granted_super_admin', 'tn731_umg_sync_granted_super_admin_to_all_sites', 10, 1 );
+
+/**
+ * Add a newly granted Super Admin to every existing site as Administrator.
+ *
+ * @param int $user_id User ID granted Super Admin privileges.
+ * @return bool Whether every site membership was synchronised.
+ */
+function tn731_umg_sync_granted_super_admin_to_all_sites( $user_id ) {
+	$user_id = absint( $user_id );
+
+	if ( ! is_multisite() || ! $user_id || ! get_userdata( $user_id ) || ! is_super_admin( $user_id ) ) {
+		return false;
+	}
+
+	$success = true;
+
+	foreach ( tn731_umg_get_site_ids() as $site_id ) {
+		$site_id = (int) $site_id;
+
+		if ( ! is_user_member_of_blog( $user_id, $site_id ) ) {
+			$result = add_user_to_blog( $site_id, $user_id, 'administrator' );
+
+			if ( is_wp_error( $result ) ) {
+				$success = false;
+			}
+
+			continue;
+		}
+
+		switch_to_blog( $site_id );
+		$user = new WP_User( $user_id );
+		$user->set_role( 'administrator' );
+		clean_user_cache( $user_id );
+		restore_current_blog();
+	}
+
+	clean_user_cache( $user_id );
+
+	return $success;
+}
+
 /**
  * Ensure the user performing activation cannot lose administrative access.
  *
@@ -463,9 +505,8 @@ function tn731_umg_add_super_admins_to_all_sites() {
 	}
 
 	$super_admins = get_super_admins();
-	$site_ids     = tn731_umg_get_site_ids();
 
-	if ( empty( $super_admins ) || empty( $site_ids ) ) {
+	if ( empty( $super_admins ) ) {
 		return;
 	}
 
@@ -476,18 +517,7 @@ function tn731_umg_add_super_admins_to_all_sites() {
 			continue;
 		}
 
-		foreach ( $site_ids as $site_id ) {
-
-			if ( ! is_user_member_of_blog( $user->ID, $site_id ) ) {
-				add_user_to_blog( $site_id, $user->ID, 'administrator' );
-			} else {
-				switch_to_blog( $site_id );
-				$wp_user = new WP_User( $user->ID );
-				$wp_user->set_role( 'administrator' );
-				clean_user_cache( $user->ID );
-				restore_current_blog();
-			}
-		}
+		tn731_umg_sync_granted_super_admin_to_all_sites( $user->ID );
 	}
 }
 

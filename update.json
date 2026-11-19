@@ -1,6 +1,6 @@
 {
-  "version": "1.32.2",
-  "body": "## 1.32.2 - 2026-09-26\n\n- Lower the PHP requirement to 7.4, matching WordPress 7.0.\n- Allow the PHP 7.4-compatible TN Update Controller bootstrap.\n",
+  "version": "1.33",
+  "body": "## 1.33 - 2026-11-20\n\n- Add newly granted Super Admins to every existing multisite site as Administrators immediately.\n",
   "requires": "7.0",
   "requires_php": "7.4"
 }
